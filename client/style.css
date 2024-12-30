@@ -1,0 +1,109 @@
+/* Reset một số kiểu mặc định */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Cài đặt font chữ cho toàn bộ trang */
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  
+  /* Tiêu đề chính */
+  h1 {
+    text-align: center;
+    color: #4CAF50;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+  }
+  
+  /* Các phần nội dung */
+  div {
+    background-color: #fff;
+    padding: 20px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Tiêu đề của các mục trong từng phần */
+  h2 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+  }
+  
+  /* Các trường nhập liệu */
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+  /* Nút bấm */
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 100%;
+    transition: background-color 0.3s;
+  }
+  
+  /* Hiệu ứng hover cho nút */
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Thông báo và kết quả */
+  #recordDetails,
+  #result {
+    background-color: #f0f8ff;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 5px;
+    border-left: 5px solid #4CAF50;
+  }
+  
+  /* Danh sách các bản ghi */
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    background-color: #fafafa;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  li:hover {
+    background-color: #f1f1f1;
+  }
+  
+  /* Các trường nhập liệu và nút bấm nhóm lại để dễ nhìn */
+  div > input,
+  div > button {
+    width: calc(100% - 20px); /* Giảm width của input và button để có khoảng cách với lề */
+    margin-left: 10px;
+  }
+  

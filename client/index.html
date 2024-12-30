@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Records Contract Interface</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+</head>
+<body>
+  <h1>Medical Records Contract Interface</h1>
+
+  <div>
+    <h2>Add Medical Record</h2>
+    <input type="text" id="name" placeholder="Enter patient's name">
+    <input type="number" id="age" placeholder="Enter patient's age">
+    <input type="text" id="gender" placeholder="Enter gender">
+    <input type="text" id="bloodType" placeholder="Enter blood type">
+    <input type="text" id="allergies" placeholder="Enter allergies">
+    <input type="text" id="diagnosis" placeholder="Enter diagnosis">
+    <input type="text" id="treatment" placeholder="Enter treatment">
+    <input type="text" id="imageHash" placeholder="Enter image hash (CID or URL)">
+    <button onclick="addRecord()">Add Record</button>
+  </div>
+
+  <div>
+    <h2>View Medical Record</h2>
+    <input type="number" id="recordId" placeholder="Enter record ID">
+    <button onclick="viewRecord()">View Record</button>
+    <div id="recordDetails"></div>
+  </div>
+
+  <div>
+    <h2>Delete Medical Record</h2>
+    <input type="number" id="deleteRecordId" placeholder="Enter record ID to delete">
+    <button onclick="deleteRecord()">Delete Record</button>
+  </div>
+
+  <script>
+    // Set up Web3 instance
+    const web3 = new Web3(window.ethereum);
+    let medicalContract;
+    let accounts;
+
+    const contractAddress = "0x7EE94Bfb0Ab815a11E96d98EfA260c2a76016419"; // Địa chỉ của hợp đồng đã triển khai
+    const contractAbi = []; // ABI của hợp đồng MedicalRecords.sol
+
+    // Tải ABI từ file JSON (cập nhật đường dẫn ABI của bạn)
+    fetch('../build/contracts/MedicalRecords.json')
+      .then(response => response.json())
+      .then(data => {
+        const abi = data.abi; // ABI từ file MedicalRecords.json
+        medicalContract = new web3.eth.Contract(abi, contractAddress);
+      })
+      .catch(error => {
+        console.error("Error loading MedicalRecords ABI:", error);
+      });
+
+    // Yêu cầu kết nối với MetaMask
+    window.ethereum.enable().then(() => {
+      web3.eth.getAccounts().then((acc) => {
+        accounts = acc;
+      });
+    });
+
+    // Thêm hồ sơ y tế mới
+    async function addRecord() {
+      const name = document.getElementById("name").value;
+      const age = document.getElementById("age").value;
+      const gender = document.getElementById("gender").value;
+      const bloodType = document.getElementById("bloodType").value;
+      const allergies = document.getElementById("allergies").value;
+      const diagnosis = document.getElementById("diagnosis").value;
+      const treatment = document.getElementById("treatment").value;
+      const imageHash = document.getElementById("imageHash").value;
+
+      if (name && age && gender && bloodType && allergies && diagnosis && treatment && imageHash && accounts[0]) {
+        try {
+          await medicalContract.methods.addRecord(
+            name, age, gender, bloodType, allergies, diagnosis, treatment, imageHash
+          ).send({ from: accounts[0] });
+          alert("Record added successfully!");
+        } catch (error) {
+          console.error("Error adding record:", error);
+        }
+      } else {
+        alert("Please fill in all fields and ensure you're connected to MetaMask.");
+      }
+    }
+
+    // Xem hồ sơ y tế theo ID
+    async function viewRecord() {
+      const recordId = document.getElementById("recordId").value;
+
+      if (recordId && accounts[0]) {
+        try {
+          const record = await medicalContract.methods.getRecord(accounts[0], recordId).call();
+          document.getElementById("recordDetails").innerHTML = `
+            <p>Timestamp: ${record[0]}</p>
+            <p>Name: ${record[1]}</p>
+            <p>Age: ${record[2]}</p>
+            <p>Gender: ${record[3]}</p>
+            <p>Blood Type: ${record[4]}</p>
+            <p>Allergies: ${record[5]}</p>
+            <p>Diagnosis: ${record[6]}</p>
+            <p>Treatment: ${record[7]}</p>
+            <p>Image Hash: ${record[8]}</p>
+          `;
+        } catch (error) {
+          console.error("Error fetching record:", error);
+        }
+      } else {
+        alert("Please provide a valid record ID.");
+      }
+    }
+
+    // Xóa hồ sơ y tế theo ID
+    async function deleteRecord() {
+      const recordId = document.getElementById("deleteRecordId").value;
+
+      if (recordId && accounts[0]) {
+        try {
+          await medicalContract.methods.deleteRecord(recordId).send({ from: accounts[0] });
+          alert("Record deleted successfully!");
+        } catch (error) {
+          console.error("Error deleting record:", error);
+        }
+      } else {
+        alert("Please provide a valid record ID.");
+      }
+    }
+  </script>
+</body>
+</html>
