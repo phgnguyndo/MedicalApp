@@ -1,136 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Medical Records Contract Interface</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
-</head>
-<body>
-  <h1>Medical Records Contract Interface</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meDossier Blockchain Interface</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+  </head>
+  <body>
+    <h1>meDossier Blockchain Interface</h1>
 
-  <div>
-    <h2>Add Medical Record</h2>
-    <input type="text" id="name" placeholder="Enter patient's name">
-    <input type="number" id="age" placeholder="Enter patient's age">
-    <input type="text" id="gender" placeholder="Enter gender">
-    <input type="text" id="bloodType" placeholder="Enter blood type">
-    <input type="text" id="allergies" placeholder="Enter allergies">
-    <input type="text" id="diagnosis" placeholder="Enter diagnosis">
-    <input type="text" id="treatment" placeholder="Enter treatment">
-    <input type="text" id="imageHash" placeholder="Enter image hash (CID or URL)">
-    <button onclick="addRecord()">Add Record</button>
-  </div>
+    <div>
+      <h2>Register Doctor License (Owner Only)</h2>
+      <input type="text" id="licenseDoctorName" placeholder="Doctor Name" />
+      <input
+        type="number"
+        id="licenseDoctorNumber"
+        placeholder="License Number"
+      />
+      <button onclick="registerDoctorLicense()">Register Doctor License</button>
+    </div>
 
-  <div>
-    <h2>View Medical Record</h2>
-    <input type="number" id="recordId" placeholder="Enter record ID">
-    <button onclick="viewRecord()">View Record</button>
-    <div id="recordDetails"></div>
-  </div>
+    <div>
+      <h2>Register as Doctor</h2>
+      <input type="text" id="doctorName" placeholder="Name" />
+      <input type="text" id="doctorHospital" placeholder="Hospital Name" />
+      <input type="text" id="doctorFaculty" placeholder="Faculty" />
+      <input type="text" id="doctorContact" placeholder="Contact" />
+      <input type="number" id="doctorLicense" placeholder="License Number" />
+      <button onclick="addDoctor()">Register Doctor</button>
+    </div>
 
-  <div>
-    <h2>Delete Medical Record</h2>
-    <input type="number" id="deleteRecordId" placeholder="Enter record ID to delete">
-    <button onclick="deleteRecord()">Delete Record</button>
-  </div>
+    <div>
+      <h2>Register as Patient</h2>
+      <input type="text" id="patientName" placeholder="Name" />
+      <input type="text" id="patientPhone" placeholder="Phone" />
+      <input type="text" id="patientGender" placeholder="Gender" />
+      <input type="date" id="patientDob" placeholder="Date of Birth" />
+      <input type="text" id="patientBloodGroup" placeholder="Blood Group" />
+      <button onclick="addPatient()">Register Patient</button>
+    </div>
 
-  <script>
-    // Set up Web3 instance
-    const web3 = new Web3(window.ethereum);
-    let medicalContract;
-    let accounts;
+    <div>
+      <h2>View Patient Details</h2>
+      <input
+        type="text"
+        id="viewPatientAddress"
+        placeholder="Patient Address"
+      />
+      <button onclick="getPatientDetails()">View Details</button>
+      <div id="patientDetails"></div>
+    </div>
 
-    const contractAddress = "0x7EE94Bfb0Ab815a11E96d98EfA260c2a76016419"; // Địa chỉ của hợp đồng đã triển khai
-    const contractAbi = []; // ABI của hợp đồng MedicalRecords.sol
+    <div>
+      <h2>View All Patients</h2>
+      <button onclick="getPatientList()">Get Patient List</button>
+      <div id="patientList"></div>
+    </div>
 
-    // Tải ABI từ file JSON (cập nhật đường dẫn ABI của bạn)
-    fetch('../build/contracts/MedicalRecords.json')
-      .then(response => response.json())
-      .then(data => {
-        const abi = data.abi; // ABI từ file MedicalRecords.json
+    <div>
+      <h2>Add Medical Record</h2>
+      <input type="text" id="recordDoctorName" placeholder="Doctor's Name" />
+      <input type="text" id="recordReason" placeholder="Reason for Visit" />
+      <input type="date" id="recordDate" placeholder="Visit Date" />
+      <input type="text" id="recordIpfs" placeholder="IPFS Hash" />
+      <input
+        type="text"
+        id="recordPatientAddress"
+        placeholder="Patient Address"
+      />
+      <button onclick="addRecord()">Add Record</button>
+    </div>
 
-        medicalContract = new web3.eth.Contract(abi, contractAddress);
-        console.log("check contract", medicalContract)
-      })
-      .catch(error => {
-        console.error("Error loading MedicalRecords ABI:", error);
+    <script>
+      const web3 = new Web3(window.ethereum);
+      let meDossierContract;
+      let accounts;
+
+      const contractAddress = "0xFea644c9821a960b8303B4e2da937b94B316b19C";
+      const contractAbi = []; // ABI của hợp đồng meDossier
+
+      fetch("../build/contracts/meDossier.json")
+        .then((response) => response.json())
+        .then((data) => {
+          const abi = data.abi;
+          meDossierContract = new web3.eth.Contract(abi, contractAddress);
+        });
+
+      window.ethereum.enable().then(() => {
+        // Lấy tài khoản hiện tại
+        web3.eth.getAccounts().then((acc) => {
+          accounts = acc;
+        });
+
+        // Lắng nghe sự kiện thay đổi tài khoản
+        window.ethereum.on("accountsChanged", (accounts) => {
+          // Cập nhật tài khoản mới vào biến accounts
+          accounts = accounts;
+        });
       });
 
-    // Yêu cầu kết nối với MetaMask
-    window.ethereum.enable().then(() => {
-      web3.eth.getAccounts().then((acc) => {
-        accounts = acc;
-      });
-    });
-
-    // Thêm hồ sơ y tế mới
-    async function addRecord() {
-      const name = document.getElementById("name").value;
-      const age = document.getElementById("age").value;
-      const gender = document.getElementById("gender").value;
-      const bloodType = document.getElementById("bloodType").value;
-      const allergies = document.getElementById("allergies").value;
-      const diagnosis = document.getElementById("diagnosis").value;
-      const treatment = document.getElementById("treatment").value;
-      const imageHash = document.getElementById("imageHash").value;
-
-      if (name && age && gender && bloodType && allergies && diagnosis && treatment && imageHash && accounts[0]) {
-        try {
-          await medicalContract.methods.addRecord(
-            name, age, gender, bloodType, allergies, diagnosis, treatment, imageHash
-          ).send({ from: accounts[0] });
-          alert("Record added successfully!");
-        } catch (error) {
-          console.error("Error adding record:", error);
-        }
-      } else {
-        alert("Please fill in all fields and ensure you're connected to MetaMask.");
+      async function getCurrentAccount() {
+        // Đảm bảo luôn lấy tài khoản mới nhất
+        const acc = await web3.eth.getAccounts();
+        return acc[0]; // Trả về tài khoản đầu tiên
       }
-    }
 
-    // Xem hồ sơ y tế theo ID
-    async function viewRecord() {
-      const recordId = document.getElementById("recordId").value;
+      async function registerDoctorLicense() {
+        const name = document.getElementById("licenseDoctorName").value;
+        const licenseNumber = document.getElementById(
+          "licenseDoctorNumber"
+        ).value;
 
-      if (recordId && accounts[0]) {
         try {
-          const record = await medicalContract.methods.getRecord(accounts[0], recordId).call();
-          document.getElementById("recordDetails").innerHTML = `
-            <p>Timestamp: ${record[0]}</p>
-            <p>Name: ${record[1]}</p>
-            <p>Age: ${record[2]}</p>
-            <p>Gender: ${record[3]}</p>
-            <p>Blood Type: ${record[4]}</p>
-            <p>Allergies: ${record[5]}</p>
-            <p>Diagnosis: ${record[6]}</p>
-            <p>Treatment: ${record[7]}</p>
-            <p>Image Hash: ${record[8]}</p>
-          `;
+          await meDossierContract.methods
+            .registerDoctor(name, licenseNumber)
+            .send({ from: accounts[0] });
+          alert("Doctor license registered successfully!");
         } catch (error) {
-          console.error("Error fetching record:", error);
+          console.error("Error registering doctor license:", error);
         }
-      } else {
-        alert("Please provide a valid record ID.");
       }
-    }
 
-    // Xóa hồ sơ y tế theo ID
-    async function deleteRecord() {
-      const recordId = document.getElementById("deleteRecordId").value;
+      async function addDoctor() {
+        const name = document.getElementById("doctorName").value;
+        const hospital = document.getElementById("doctorHospital").value;
+        const faculty = document.getElementById("doctorFaculty").value;
+        const contact = document.getElementById("doctorContact").value;
+        const license = document.getElementById("doctorLicense").value;
 
-      if (recordId && accounts[0]) {
         try {
-          await medicalContract.methods.deleteRecord(recordId).send({ from: accounts[0] });
-          alert("Record deleted successfully!");
+          await meDossierContract.methods
+            .addDoctor(name, hospital, faculty, contact, license)
+            .send({ from: accounts[0] });
+          alert("Doctor registered successfully!");
         } catch (error) {
-          console.error("Error deleting record:", error);
+          console.error("Error registering doctor:", error);
         }
-      } else {
-        alert("Please provide a valid record ID.");
       }
-    }
-  </script>
-</body>
+
+      async function addPatient() {
+        const name = document.getElementById("patientName").value;
+        const phone = document.getElementById("patientPhone").value;
+        const gender = document.getElementById("patientGender").value;
+        const dob = document.getElementById("patientDob").value;
+        const bloodGroup = document.getElementById("patientBloodGroup").value;
+
+        try {
+          await meDossierContract.methods
+            .addPatient(name, phone, gender, dob, bloodGroup)
+            .send({ from: accounts[0] });
+          alert("Patient registered successfully!");
+        } catch (error) {
+          console.error("Error registering patient:", error);
+        }
+      }
+
+      async function getPatientDetails() {
+        const address = document.getElementById("viewPatientAddress").value;
+
+        try {
+          const details = await meDossierContract.methods
+            .getPatientDetails(address)
+            .call();
+          document.getElementById("patientDetails").innerHTML = `
+          <p>Name: ${details[0]}</p>
+          <p>Phone: ${details[1]}</p>
+          <p>Gender: ${details[2]}</p>
+          <p>Date of Birth: ${details[3]}</p>
+          <p>Blood Group: ${details[4]}</p>
+        `;
+        } catch (error) {
+          console.error("Error fetching patient details:", error);
+        }
+      }
+
+      async function getPatientList() {
+        try {
+          const patients = await meDossierContract.methods
+            .getPatientList()
+            .call();
+          let listHtml = "<ul>";
+          patients.forEach((patient) => {
+            listHtml += `<li>${patient}</li>`;
+          });
+          listHtml += "</ul>";
+          document.getElementById("patientList").innerHTML = listHtml;
+        } catch (error) {
+          console.error("Error fetching patient list:", error);
+        }
+      }
+
+      async function addRecord() {
+        const doctorName = document.getElementById("recordDoctorName").value;
+        const reason = document.getElementById("recordReason").value;
+        const date = document.getElementById("recordDate").value;
+        const ipfs = document.getElementById("recordIpfs").value;
+        const patientAddress = document.getElementById(
+          "recordPatientAddress"
+        ).value;
+
+        try {
+          await meDossierContract.methods
+            .addRecord(doctorName, reason, date, ipfs, patientAddress)
+            .send({ from: accounts[0] });
+          alert("Medical record added successfully!");
+        } catch (error) {
+          console.error("Error adding medical record:", error);
+        }
+      }
+    </script>
+  </body>
 </html>

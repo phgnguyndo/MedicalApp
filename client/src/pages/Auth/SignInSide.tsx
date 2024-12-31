@@ -29,7 +29,7 @@ export default function SignInSide() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<FormValues>();
 
   const onSubmit = (data: FormValues) => {
@@ -60,7 +60,7 @@ export default function SignInSide() {
                   ? t.palette.grey[50]
                   : t.palette.grey[900],
               backgroundSize: "cover",
-              backgroundPosition: "center"
+              backgroundPosition: "center",
             }}
           />
           <Grid
@@ -78,14 +78,14 @@ export default function SignInSide() {
                 mx: 4,
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
                 <LockOutlinedIcon />
               </Avatar>
               <Typography component="h1" variant="h5">
-                Sign in
+                Đăng ký
               </Typography>
               <Box sx={{ mt: 1 }}>
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -100,7 +100,7 @@ export default function SignInSide() {
                     //autoFocus
                     value="test@test.com"
                     {...register("email", {
-                      required: "Email is required"
+                      required: "Email is required",
                     })}
                     error={!!errors.email}
                     helperText={errors.email?.message}
@@ -116,7 +116,7 @@ export default function SignInSide() {
                     value="1234"
                     //autoComplete="current-password"
                     {...register("password", {
-                      required: "Password is required"
+                      required: "Password is required",
                     })}
                     error={!!errors.password}
                     helperText={errors.password?.message}
@@ -125,7 +125,7 @@ export default function SignInSide() {
                         <Button onClick={() => setShowPassword(!showPassword)}>
                           {showPassword ? "Hide" : "Show"}
                         </Button>
-                      )
+                      ),
                     }}
                   />
                   <FormControlLabel
@@ -138,7 +138,7 @@ export default function SignInSide() {
                     variant="contained"
                     sx={{ mt: 3, mb: 2 }}
                   >
-                    Sign In
+                    Đăng ký
                   </Button>
                 </form>
                 <Grid container>
@@ -147,7 +147,7 @@ export default function SignInSide() {
                       to={"/forgot"}
                       style={{
                         textDecoration: "none",
-                        color: "inherit"
+                        color: "inherit",
                       }}
                     >
                       Forgot password?
@@ -158,43 +158,48 @@ export default function SignInSide() {
                       to={"/signup"}
                       style={{
                         textDecoration: "none",
-                        color: "inherit"
+                        color: "inherit",
                       }}
                     >
                       {"Don't have an account? Sign Up"}
                     </Link>
                   </Grid>
                 </Grid>
-                <Divider sx={{ mt: 2 }} light variant="middle">
-                  OR
-                </Divider>
-                <Button
-                  fullWidth
-                  startIcon={<GoogleIcon />}
-                  variant="outlined"
-                  sx={{
-                    mt: 2
+                <Link
+                  to={"/signup"}
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
                   }}
                 >
-                  Continue with google
-                </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      mt: 2,
+                    }}
+                  >
+                    {"Đăng ký tài khoản bác sĩ"}
+                  </Button>
+                </Link>
 
-                <Button
-                  fullWidth
-                  startIcon={<FacebookIcon />}
-                  variant="outlined"
-                  sx={{
-                    mt: 2
+                <Link
+                  to={"/signup-patient"}
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
                   }}
                 >
-                  Continue with facebook
-                </Button>
-
-                <Typography align="center" variant="subtitle2" sx={{ mt: 2 }}>
-                  By continuing, you agree to{" "}
-                  <span style={{ color: "green" }}>Terms of Service</span> and
-                  <span style={{ color: "green" }}> Privacy Policy</span>.
-                </Typography>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      mt: 2,
+                    }}
+                  >
+                    {"Đăng ký tài khoản bệnh nhân"}
+                  </Button>
+                </Link>
               </Box>
             </Box>
           </Grid>

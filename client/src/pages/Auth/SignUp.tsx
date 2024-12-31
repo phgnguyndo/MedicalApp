@@ -12,22 +12,54 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { useForm } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
-
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 type FormValues = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
+  name: string;
+  hospital: string;
+  faculty: string;
+  contact: string;
+  license: string;
 };
 
-export default function SignUp() {
+export default function SignUp({ type }: any) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    control
+    control,
   } = useForm<FormValues>();
-  const onSubmit = (data: FormValues) => console.log(data);
+  const navigate = useNavigate();
+
+  const { contract, accountAddress } = useContext(AppContext);
+
+  const onSubmit = async (data: FormValues) => {
+    if (type === "doctor") {
+      try {
+        const res = await contract.methods
+          .addDoctor(
+            data.name,
+            data.hospital,
+            data.faculty,
+            data.contact,
+            data.license
+          )
+          .send({ from: accountAddress, gas: 3000000 });
+        localStorage.setItem("role", "doctor");
+        navigate(`/dashboard`);
+
+        toast.success("Đăng ký tài khoản bác sĩ thành công", {
+          autoClose: 1000,
+        });
+      } catch (error) {
+        console.log(error);
+        toast.error("Đăng ký tài khoản bác sĩ  thất bại", { autoClose: 1000 });
+      }
+    } else {
+    }
+  };
 
   return (
     <Container component="main" maxWidth="xs" sx={{ height: "80vh" }}>
@@ -36,86 +68,90 @@ export default function SignUp() {
           marginTop: 8,
           display: "flex",
           flexDirection: "column",
-          alignItems: "center"
+          alignItems: "center",
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign up
+          Đăng ký
         </Typography>
         <Box sx={{ mt: 3 }}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   //autoComplete="given-name"
                   //name="firstName"
                   //required
                   fullWidth
-                  id="firstName"
-                  label="First Name"
+                  id="name"
+                  label="Tên bác sĩ"
                   //autoFocus
-                  {...register("firstName", {
-                    required: "First Name is required"
+                  {...register("name", {
+                    required: "Vui lòng nhập tên bác sĩ",
                   })}
-                  error={!!errors.firstName}
-                  helperText={errors.firstName?.message}
+                  error={!!errors.name}
+                  helperText={errors.name?.message}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   //required
                   fullWidth
-                  id="lastName"
-                  label="Last Name"
+                  id="hospital"
+                  label="Bệnh viện"
                   //name="lastName"
                   //autoComplete="family-name"
-                  {...register("lastName", {
-                    required: "Last Name is required"
+                  {...register("hospital", {
+                    required: "Vui lòng nhập bệnh viện",
                   })}
-                  error={!!errors.lastName}
-                  helperText={errors.lastName?.message}
+                  error={!!errors.hospital}
+                  helperText={errors.hospital?.message}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  id="faculty"
+                  label="Khoa"
+                  {...register("faculty", {
+                    required: "Vui lòng nhập khoa",
+                  })}
+                  error={!!errors.faculty}
+                  helperText={errors.faculty?.message}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Số điện thoại"
+                  type="contact"
+                  id="contact"
+                  {...register("contact", {
+                    required: "Vui lòng nhập số điện thoại",
+                  })}
+                  error={!!errors.contact}
+                  helperText={errors.contact?.message}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   //required
                   fullWidth
-                  id="email"
-                  label="Email Address"
-                  //name="email"
-                  //autoComplete="email"
-                  {...register("email", {
-                    required: "Email is required"
+                  label="Chứng chỉ hành nghề"
+                  type="number"
+                  id="license"
+                  {...register("license", {
+                    required: "Vui lòng nhập chứng chỉ hành nghề",
+                    pattern: {
+                      value: /^[0-9]+$/,
+                      message: "Chỉ được nhập số",
+                    },
                   })}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  //required
-                  fullWidth
-                  //name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  //autoComplete="new-password"
-                  {...register("password", {
-                    required: "Password is required"
-                  })}
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControlLabel
-                  control={
-                    <Checkbox value="allowExtraEmails" color="primary" />
-                  }
-                  label="I want to receive inspiration, marketing promotions and updates via email."
+                  error={!!errors.license}
+                  helperText={errors.license?.message}
                 />
               </Grid>
             </Grid>
@@ -125,7 +161,7 @@ export default function SignUp() {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
             >
-              Sign Up
+              Đăng ký
             </Button>
             <Grid container justifyContent="flex-end">
               <Grid item>
@@ -133,10 +169,10 @@ export default function SignUp() {
                   to={"/login"}
                   style={{
                     textDecoration: "none",
-                    color: "inherit"
+                    color: "inherit",
                   }}
                 >
-                  Already have an account? Sign in
+                  Bản đã có tài khoản? Đăng nhập
                 </Link>
               </Grid>
             </Grid>
