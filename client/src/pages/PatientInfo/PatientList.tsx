@@ -1,4 +1,5 @@
 import React from "react";
+import { useContext } from "react";
 import {
   Table,
   TableBody,
@@ -9,18 +10,24 @@ import {
   Paper,
   Grid,
   Box,
-  TablePagination
+  TablePagination,
+  Button,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import Chip from "@mui/material/Chip";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
 import Appbar from "../../components/Appbar";
 import AddPatientDialog from "./AddPatientDialog";
 import { mockPatientData } from "../../mockData";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
+import { useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 
 function PatientList({ data }: any) {
+  const { contract, accountAddress } = useContext(AppContext);
   const [patients, setPatients] = React.useState(mockPatientData);
+  const navigate = useNavigate();
   const [searchedPatients, setSearchedPatients] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
@@ -53,6 +60,16 @@ function PatientList({ data }: any) {
     rowsPerPage -
     Math.min(rowsPerPage, patientList.length - page * rowsPerPage);
 
+  const handleEdit = (id: any) => {
+    navigate(`/patient-info/${id}`);
+  };
+
+  const handleDelete = async (id: any) => {
+    // const updatedPatients = patients.filter((patient: any) => patient.id!== id);
+    // setPatients(updatedPatients);
+    await contract.methods.deleteRecord(id).send({ from: accountAddress });
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar appBarTitle="Danh sách bệnh nhân" />
@@ -65,7 +82,7 @@ function PatientList({ data }: any) {
               : theme.palette.grey[900],
           flexGrow: 1,
           height: "100vh",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         <Toolbar />
@@ -86,13 +103,14 @@ function PatientList({ data }: any) {
                 <TableHead>
                   <TableRow>
                     <TableCell align="center">#</TableCell>
-                    <TableCell>FULL NAME</TableCell>
-                    <TableCell>AGE</TableCell>
-                    <TableCell>GENDER</TableCell>
-                    <TableCell>ADDRESS</TableCell>
-                    <TableCell>REFERRED BY DR.</TableCell>
-                    <TableCell>ENTRY DATE</TableCell>
-                    <TableCell>STATUS</TableCell>
+                    <TableCell>Tên bệnh nhân</TableCell>
+                    <TableCell>Tuổi</TableCell>
+                    <TableCell>Giới tính</TableCell>
+                    <TableCell>Nhóm máu</TableCell>
+                    <TableCell>Dị ứng</TableCell>
+                    <TableCell>Chuẩn đoán</TableCell>
+                    <TableCell>Phương pháp điều trị</TableCell>
+                    <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -105,26 +123,33 @@ function PatientList({ data }: any) {
                   ).map((patient: any, index: any) => (
                     <TableRow
                       key={index}
-                      component={Link}
-                      to={`/patient-info/${patient.id}`}
+                      // component={Link}
+                      // to={`/patient-info/${patient.id}`}
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       <TableCell align="center">{patient.id}</TableCell>
-                      <TableCell>{patient.fullName}</TableCell>
+                      <TableCell>{patient.name}</TableCell>
                       <TableCell>{patient.age}</TableCell>
                       <TableCell>{patient.gender}</TableCell>
-                      <TableCell>{patient.address}</TableCell>
-                      <TableCell>{patient.referredByDoctor}</TableCell>
-                      <TableCell>{patient.dateOfEntry}</TableCell>
+                      <TableCell>{patient.bloodType}</TableCell>
+                      <TableCell>{patient.allergies}</TableCell>
+                      <TableCell>{patient.diagnosis}</TableCell>
+                      <TableCell>{patient.treatment}</TableCell>
                       <TableCell>
-                        <Chip
-                          label={patient.status}
-                          color={
-                            patient.status === "In Treatment"
-                              ? "success"
-                              : "error"
-                          }
-                          sx={{ textTransform: "uppercase" }}
+                        <DeleteOutlineOutlinedIcon
+                          sx={{
+                            color: "red",
+                            cursor: "pointer",
+                            marginRight: "5px",
+                          }}
+                          onClick={() => handleDelete(patient.id)}
+                        />
+                        <BorderColorOutlinedIcon
+                          sx={{
+                            color: "rgb(102, 179, 255)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleEdit(patient.id)}
                         />
                       </TableCell>
                     </TableRow>

@@ -50,7 +50,9 @@
       .then(response => response.json())
       .then(data => {
         const abi = data.abi; // ABI từ file MedicalRecords.json
+
         medicalContract = new web3.eth.Contract(abi, contractAddress);
+        console.log("check contract", medicalContract)
       })
       .catch(error => {
         console.error("Error loading MedicalRecords ABI:", error);
