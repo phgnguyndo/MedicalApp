@@ -48,7 +48,7 @@ contract meDossier{
     mapping(string=>mapping(uint256=>bool)) Registered;
     
     
-    constructor() public {
+    constructor() {
         owner = msg.sender;
         
     }
@@ -137,6 +137,34 @@ contract meDossier{
         return (pat.name,pat.phone,pat.gender,pat.dob,pat.bloodgroup);
     }
 
+    function getAllPatients() public view returns (
+    uint256[] memory ids,
+    string[] memory names,
+    string[] memory phones,
+    string[] memory genders,
+    string[] memory dobs,
+    string[] memory bloodgroups
+    ) {
+        uint256 totalPatients = patientList.length;
+        ids = new uint256[](totalPatients);
+        names = new string[](totalPatients);
+        phones = new string[](totalPatients);
+        genders = new string[](totalPatients);
+        dobs = new string[](totalPatients);
+        bloodgroups = new string[](totalPatients);
+
+        for (uint256 i = 0; i < totalPatients; i++) {
+            address patientAddress = patientList[i];
+            patient memory pat = patients[patientAddress];
+
+            ids[i] = pat.id;
+            names[i] = pat.name;
+            phones[i] = pat.phone;
+            genders[i] = pat.gender;
+            dobs[i] = pat.dob;
+            bloodgroups[i] = pat.bloodgroup;
+        }
+    }
   //get the length of records of particular address  
      function getrecordlist(address _addr)  public view returns (uint256 ){  
      return (patients[_addr].records.length);
@@ -198,35 +226,69 @@ function getRegisteredDoctorsList(uint256 id) public view returns(uint256 licens
         }
     }
 
+
+    function getAllDoctors() public view returns (
+    uint256[] memory ids,
+    string[] memory names,
+    string[] memory contacts,
+    string[] memory hospitals,
+    string[] memory faculties,
+    address[] memory addresses,
+    bool[] memory approvals,
+    uint256[] memory licenses
+    ) {
+        uint256 doctorCount = doctorList.length;
+        
+        ids = new uint256[](doctorCount);
+        names = new string[](doctorCount);
+        contacts = new string[](doctorCount);
+        hospitals = new string[](doctorCount);
+        faculties = new string[](doctorCount);
+        addresses = new address[](doctorCount);
+        approvals = new bool[](doctorCount);
+        licenses = new uint256[](doctorCount);
+
+        for (uint256 i = 0; i < doctorCount; i++) {
+            doctor memory doc = doctors[doctorList[i]];
+            ids[i] = doc.id;
+            names[i] = doc.name;
+            contacts[i] = doc.contact;
+            hospitals[i] = doc.hname;
+            faculties[i] = doc.faculty;
+            addresses[i] = doc.addr;
+            approvals[i] = doc.isApproved;
+            licenses[i] = doc.licenseno;
+        }
+    }
 //get doctor's details  for verification
-    function getDoctorbyLicense(uint256 license) public view returns(uint256 id, string memory name,string memory hospital, string memory _faculty,address addr,bool isApproved,uint256 licenseno){
+    // function getDoctorbyLicense(uint256 license) public view returns(uint256 id, string memory name,string memory hospital, string memory _faculty,address addr,bool isApproved,uint256 licenseno){
        
-         uint256 i=0;
-        for(i = 0;i<doctorList.length;i++){
-        if(doctors[doctorList[i]].licenseno==license){
-            break;
-        }
-    }    
-    doctor memory doc = doctors[doctorList[i]];
-    require(isDoctor[doc.addr]==true,"Doctor hasn't signed up in meDossier");
-         require(doc.isApproved==true,"Doctor is not approved");
+    //      uint256 i=0;
+    //     for(i = 0;i<doctorList.length;i++){
+    //     if(doctors[doctorList[i]].licenseno==license){
+    //         break;
+    //     }
+    // }    
+    // doctor memory doc = doctors[doctorList[i]];
+    // require(isDoctor[doc.addr]==true,"Doctor hasn't signed up in meDossier");
+    //      require(doc.isApproved==true,"Doctor is not approved");
         
         
-        return (doc.id,doc.name,doc.hname,doc.faculty,doc.addr,doc.isApproved,doc.licenseno) ;
+    //     return (doc.id,doc.name,doc.hname,doc.faculty,doc.addr,doc.isApproved,doc.licenseno) ;
        
-    }
+    // }
     
- function getDoctorbyName(string memory _name) public view returns(uint256 id,string memory name , string memory contact ,string memory hname ,string memory faculty ,address addr , bool isApproved,uint256 licenseno)  {
-        uint256 i=0;
-        for(i = 0;i<doctorList.length;i++){
-        if(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name))){
-            break;
-        }
-    }    
-        require(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name)),"Doctor doesn't exists with the given name");
-        doctor memory doc = doctors[doctorList[i]];
-        return (doc.id,doc.name,doc.contact,doc.hname,doc.faculty,doc.addr, doc.isApproved,doc.licenseno);
-    }
+//  function getDoctorbyName(string memory _name) public view returns(uint256 id,string memory name , string memory contact ,string memory hname ,string memory faculty ,address addr , bool isApproved,uint256 licenseno)  {
+//         uint256 i=0;
+//         for(i = 0;i<doctorList.length;i++){
+//         if(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name))){
+//             break;
+//         }
+//     }    
+//         require(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name)),"Doctor doesn't exists with the given name");
+//         doctor memory doc = doctors[doctorList[i]];
+//         return (doc.id,doc.name,doc.contact,doc.hname,doc.faculty,doc.addr, doc.isApproved,doc.licenseno);
+//     }
     
 
  function getDoctorByAddress(address _address) public view returns(uint256 id,string memory name , string memory contact ,string memory hname ,string memory faculty ,address addr , bool isApproved,uint256 licenseno) {
@@ -253,8 +315,10 @@ function getRegisteredDoctorsList(uint256 id) public view returns(uint256 licens
         return true;
     }
 
-function doctorLogin() public{
-    if(Registered[doctors[msg.sender].name][doctors[msg.sender].licenseno] == true){
-        doctors[msg.sender].isApproved = true;
-    }
-}}
+// function doctorLogin() public{
+//     if(Registered[doctors[msg.sender].name][doctors[msg.sender].licenseno] == true){
+//         doctors[msg.sender].isApproved = true;
+//     }
+// }
+
+}
