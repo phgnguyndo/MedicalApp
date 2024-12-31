@@ -7,29 +7,27 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchInput from "../../components/SearchInput";
 import { useForm } from "react-hook-form";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
+import Grid from "@mui/material/Grid";
+import avartar from "../../assets/avatar-blank.png";
+import { AppContext } from "../context/AppContext";
 
 type FormValues = {
-  id: string;
-  fullName: string;
+  name: string;
+  age: number;
   gender: string;
-  phone: string;
-  dateOfEntry: any;
-  referredByDoctor: string;
-  status: string;
-  age: string;
-  address: string;
+  bloodType: any;
+  allergies: string;
+  diagnosis: string;
+  treatment: string;
+  imageHash: string;
 };
 
 const Transition = React.forwardRef(function Transition(
@@ -44,14 +42,17 @@ const Transition = React.forwardRef(function Transition(
 export default function AddPatientDialog({
   patients,
   setPatients,
-  handleChange
+  handleChange,
 }: any) {
   const [open, setOpen] = React.useState(false);
+  const [file, setFile] = React.useState(null);
+  const { contract, accountAddress } = React.useContext(AppContext);
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    reset,
+    formState: { errors },
   } = useForm<FormValues>();
 
   const handleClickOpen = () => {
@@ -60,13 +61,40 @@ export default function AddPatientDialog({
 
   const handleClose = () => {
     setOpen(false);
+    reset();
+    setUrl(avartar);
   };
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    data.id = patients.length + 1;
-    setPatients((prevState: any) => [...prevState, data]);
+  const onSubmit = async (data: FormValues) => {
+    const res = await contract.methods
+      .addRecord(
+        data.name,
+        data.age,
+        data.gender,
+        data.bloodType,
+        data.allergies,
+        data.diagnosis,
+        data.treatment,
+        ""
+      )
+      .send({ from: accountAddress, gas: 3000000 });
+    // setPatients((prevState: any) => [...prevState, data]);
     handleClose();
+  };
+
+  const onImportFileClick = () => {
+    inputFile.current?.click();
+  };
+  const handleOnChangeFile = (e: any) => {
+    setFile(e.target.files[0]);
+    setUrl(URL.createObjectURL(e.target.files[0]));
+  };
+
+  // const [url, setUrl] = React.useState(data_detail?.avartar ? `${import.meta.env.VITE_BASE_URL}${data_detail.avartar}` : avartar)
+  const [url, setUrl] = React.useState<any>(avartar);
+  const inputFile = React.useRef<HTMLInputElement | null>(null);
+  const setInputFileRef = (node: HTMLInputElement | null) => {
+    inputFile.current = node;
   };
 
   return (
@@ -83,7 +111,7 @@ export default function AddPatientDialog({
           startIcon={<AddIcon />}
           onClick={handleClickOpen}
         >
-          Add Patient
+          Thêm bệnh nhân<nav></nav>
         </Button>
       </Stack>
 
@@ -91,129 +119,156 @@ export default function AddPatientDialog({
         open={open}
         onClose={handleClose}
         TransitionComponent={Transition}
-        maxWidth="xs"
+        maxWidth="md"
         fullWidth
         sx={{ height: "100%" }}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>Add Patient</DialogTitle>
+          <DialogTitle>Thêm bệnh án</DialogTitle>
 
           <DialogContent dividers>
-            <TextField
-              margin="dense"
-              id="fullName"
-              label="Full Name"
-              type="fullName"
-              fullWidth
-              variant="outlined"
-              {...register("fullName", {
-                required: "Name is required"
-              })}
-              error={!!errors.fullName}
-              helperText={errors.fullName?.message}
-            />
-            <FormControl fullWidth margin="dense">
-              <InputLabel id="gender">Gender</InputLabel>
-              <Select
-                labelId="gender"
-                id="gender"
-                label="Gender"
-                {...register("gender")}
-              >
-                <MenuItem value={"Male"}>Male</MenuItem>
-                <MenuItem value={"Female"}>Female</MenuItem>
-                <MenuItem value={"Other"}>Other</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              margin="dense"
-              id="phone"
-              label="Phone no"
-              type="phone"
-              fullWidth
-              variant="outlined"
-              placeholder="0 123456789"
-              {...register("phone", {
-                required: "Phone no is required"
-              })}
-              error={!!errors.phone}
-              helperText={errors.phone?.message}
-            />
-            <TextField
-              margin="dense"
-              id="address"
-              label="Address"
-              type="address"
-              fullWidth
-              variant="outlined"
-              placeholder="ex: street name, number, postal code"
-              {...register("address", {
-                required: "Address is required"
-              })}
-              error={!!errors.address}
-              helperText={errors.address?.message}
-            />
-            <TextField
-              margin="dense"
-              id="age"
-              label="Age"
-              type="age"
-              fullWidth
-              variant="outlined"
-              placeholder="ex: 18"
-              {...register("age", {
-                required: "Age is required"
-              })}
-              error={!!errors.age}
-              helperText={errors.age?.message}
-            />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DemoContainer components={["DatePicker"]}>
-                <DatePicker
-                  label="Date of Entry"
-                  sx={{ width: "100%" }}
-                  onError={() => !!errors.dateOfEntry}
-                  slotProps={{
-                    textField: {
-                      helperText: "Date is required"
-                    }
+            <Grid container spacing={2}>
+              <Grid item xs={3}>
+                <Box
+                  component="img"
+                  sx={{
+                    height: "100%",
+                    width: "100%",
                   }}
+                  alt="image"
+                  src={url}
+                  style={{ cursor: "pointer" }}
+                  onClick={onImportFileClick}
                 />
-              </DemoContainer>
-            </LocalizationProvider>
-            <TextField
-              margin="dense"
-              id="referredByDoctor"
-              label="Referred By Doctor"
-              type="referredByDoctor"
-              fullWidth
-              variant="outlined"
-              placeholder="ex: Dr. Smith"
-              {...register("referredByDoctor", {
-                required: "Specialist is required"
-              })}
-              error={!!errors.referredByDoctor}
-              helperText={errors.referredByDoctor?.message}
-            />
-            <FormControl fullWidth margin="dense">
-              <InputLabel id="status">Status</InputLabel>
-              <Select
-                labelId="status"
-                id="status"
-                label="Status"
-                {...register("status")}
-              >
-                <MenuItem value={"In Treatment"}>In Treatment</MenuItem>
-                <MenuItem value={"In ICU"}>In ICU</MenuItem>
-                <MenuItem value={"Recovered"}>Recovered</MenuItem>
-                <MenuItem value={"Discharged"}>Discharged</MenuItem>
-              </Select>
-            </FormControl>
+
+                <input
+                  type="file"
+                  id="file"
+                  ref={setInputFileRef}
+                  style={{ display: "none" }}
+                  onChange={(e) => handleOnChangeFile(e)}
+                />
+              </Grid>
+              <Grid item xs={9}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="name"
+                      label="Tên bệnh nhân"
+                      type="fullName"
+                      fullWidth
+                      variant="outlined"
+                      {...register("name", {
+                        required: "Hãy nhập tên",
+                      })}
+                      // error={!!errors.name}
+                      helperText={errors.name?.message}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="age"
+                      label="Tuổi"
+                      type="age"
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Nhập tuổi"
+                      {...register("age", {
+                        required: "Hãy nhập tuổi",
+                      })}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl size="small" fullWidth margin="dense">
+                      <InputLabel id="gender">Gender</InputLabel>
+                      <Select
+                        labelId="gender"
+                        id="gender"
+                        label="Giới tính"
+                        {...register("gender")}
+                      >
+                        <MenuItem value={"male"}>Nam</MenuItem>
+                        <MenuItem value={"female"}>Nữ</MenuItem>
+                        <MenuItem value={"other"}>Khác</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="bloodType"
+                      label="Nhóm máu"
+                      type="bloodType"
+                      fullWidth
+                      variant="outlined"
+                      {...register("bloodType", {
+                        required: "Hãy nhập nhóm máu",
+                      })}
+                      // error={!!errors.bloodType}
+                      // helperText={errors.bloodType?.message}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="allergies"
+                      label="Dị ứng"
+                      type="allergies"
+                      fullWidth
+                      variant="outlined"
+                      {...register("allergies")}
+                      // error={!!errors.allergies}
+                      // helperText={errors.allergies?.message}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="diagnosis"
+                      label="Chuẩn đoán"
+                      type="diagnosis"
+                      fullWidth
+                      variant="outlined"
+                      placeholder="ex: 18"
+                      {...register("diagnosis", {
+                        required: "Hãy nhập chuẩn đoán",
+                      })}
+                      // error={!!errors.diagnosis}
+                      // helperText={errors.diagnosis?.message}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      size="small"
+                      margin="dense"
+                      id="treatment"
+                      label="Phương pháp điều trị"
+                      type="treatment"
+                      fullWidth
+                      variant="outlined"
+                      placeholder="ex: Dr. Smith"
+                      {...register("treatment", {
+                        required: "Hãy nhập phương pháp điều trị",
+                      })}
+                      // error={!!errors.treatment}
+                      // helperText={errors.treatment?.message}
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleClose}>Huỷ</Button>
             <Button type="submit" variant="contained">
-              Submit
+              Thêm
             </Button>
           </DialogActions>
         </form>

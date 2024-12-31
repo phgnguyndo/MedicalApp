@@ -5,21 +5,18 @@ import SignUp from "./pages/Auth/SignUp";
 import SignInSide from "./pages/Auth/SignInSide";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import Dashboard from "./pages/Dashboard/Dashboard";
-import AllOrders from "./pages/Orders/AllOrders";
 import Profile from "./pages/Profile/Profile";
 import DoctorList from "./pages/Profile/DoctorList";
 import PatientInfo from "./pages/PatientInfo/PatientInfo";
 import PatientList from "./pages/PatientInfo/PatientList";
-import Appointments from "./pages/Appointments/Appointments";
-import Calender from "./pages/Calender/Calender";
-import Kanban from "./pages/Kanban/Kanban";
 import Account from "./pages/Account/Account";
-import Settings from "./pages/Settings/Settings";
+import RegisterDoctor from "./pages/Settings/Settings";
 import { mockPatientData } from "./mockData";
+import SignUpPatient from "./pages/Auth/SignupPatient";
 
 const USER_TYPES = {
   NORMAL_USER: "Normal User",
-  ADMIN_USER: "Admin User"
+  ADMIN_USER: "Admin User",
 };
 
 const CURRENT_USER_TYPE = USER_TYPES.ADMIN_USER;
@@ -36,19 +33,23 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <SignInSide />,
-    errorElement: <ErrorPage />
+    errorElement: <ErrorPage />,
   },
   {
     path: "/login",
-    element: <SignInSide />
+    element: <SignInSide />,
   },
   {
     path: "/signup",
-    element: <SignUp />
+    element: <SignUp type="doctor" />,
+  },
+  {
+    path: "/signup-patient",
+    element: <SignUpPatient type="patient" />,
   },
   {
     path: "/forgot",
-    element: <ForgotPassword />
+    element: <ForgotPassword />,
   },
   {
     path: "/dashboard",
@@ -56,15 +57,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Dashboard />
       </AdminElement>
-    )
-  },
-  {
-    path: "/orders",
-    element: (
-      <AdminElement>
-        <AllOrders />
-      </AdminElement>
-    )
+    ),
   },
   {
     path: "/profile",
@@ -72,7 +65,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <Profile />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/patient-info/:id",
@@ -80,7 +73,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <PatientInfo patients={mockPatientData} />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/patient-list",
@@ -88,7 +81,7 @@ export const router = createBrowserRouter([
       <AdminElement>
         <PatientList data={mockPatientData} />
       </AdminElement>
-    )
+    ),
   },
   {
     path: "/doctor-list",
@@ -96,46 +89,14 @@ export const router = createBrowserRouter([
       <AdminElement>
         <DoctorList />
       </AdminElement>
-    )
+    ),
   },
-  {
-    path: "/appointments",
-    element: (
-      <AdminElement>
-        <Appointments />
-      </AdminElement>
-    )
-  },
-  {
-    path: "/calender",
-    element: (
-      <AdminElement>
-        <Calender />
-      </AdminElement>
-    )
-  },
-  {
-    path: "/kanban",
-    element: (
-      <AdminElement>
-        <Kanban />
-      </AdminElement>
-    )
-  },
-  {
-    path: "/account",
-    element: (
-      <AdminElement>
-        <Account />
-      </AdminElement>
-    )
-  },
-  {
-    path: "/settings",
-    element: (
-      <AdminElement>
-        <Settings />
-      </AdminElement>
-    )
-  }
+  // {
+  //   path: "/register-doctor",
+  //   element: (
+  //     <AdminElement>
+  //       <RegisterDoctor />
+  //     </AdminElement>
+  //   ),
+  // },
 ]);

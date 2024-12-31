@@ -12,14 +12,14 @@ import {
   Typography,
   Checkbox,
   Container,
-  Paper
+  Paper,
 } from "@mui/material";
 import Appbar from "../../components/Appbar";
 import Toolbar from "@mui/material/Toolbar";
 
 import { useThemeStore } from "../../store/themeStore";
 
-export default function Settings() {
+export default function RegisterDoctor() {
   const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
   const {
@@ -27,7 +27,7 @@ export default function Settings() {
     toggleMode,
     setPrimaryColor,
     setSecondaryColor,
-    setBorderRadius
+    setBorderRadius,
   } = useThemeStore();
 
   const handlePrimaryColorChange = (
@@ -58,7 +58,7 @@ export default function Settings() {
               : theme.palette.grey[900],
           flexGrow: 1,
           height: "100vh",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         <Toolbar />
@@ -67,7 +67,7 @@ export default function Settings() {
             sx={{
               display: "flex",
               justifyContent: "flex-start",
-              alignItems: "flex-start"
+              alignItems: "flex-start",
             }}
           >
             <List sx={{ width: "75%" }}>

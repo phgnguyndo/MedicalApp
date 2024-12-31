@@ -9,7 +9,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
 } from "@mui/material";
 import { Avatar, Grid, Box } from "@mui/material";
 import { mockDoctorsData } from "../../mockData";
@@ -30,17 +30,13 @@ export default function DoctorList() {
               : theme.palette.grey[900],
           flexGrow: 1,
           height: "100vh",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         <Toolbar />
 
         <Container sx={{ mt: 4, mb: 4 }}>
-          <AddDoctorDialog
-            mockData={mockDoctorsData}
-            doctors={doctors}
-            setDoctors={setDoctors}
-          />
+          <AddDoctorDialog doctors={doctors} setDoctors={setDoctors} />
           <Grid
             container
             spacing={2}
@@ -71,7 +67,7 @@ export default function DoctorList() {
                           <Avatar
                             src={"https://i.pravatar.cc/300"}
                             sx={{
-                              height: "25%"
+                              height: "25%",
                             }}
                           />
                         </TableCell>

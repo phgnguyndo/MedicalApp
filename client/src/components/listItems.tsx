@@ -19,6 +19,11 @@ const primarynavList = [
     label: "Thông tin cá nhân",
     icon: <AccountCircleIcon />,
   },
+  // {
+  //   link: "/register-doctor",
+  //   label: "Đăng ký bác sĩ",
+  //   icon: <SickIcon />,
+  // },
   {
     link: "/doctor-list",
     label: "Danh sách bác sĩ",
@@ -29,26 +34,6 @@ const primarynavList = [
     label: "Danh sách bệnh nhân",
     icon: <SickIcon />,
   },
-  // {
-  //   link: "/appointments",
-  //   label: "Appointments",
-  //   icon: <BookOnlineIcon />,
-  // },
-  // {
-  //   link: "/calender",
-  //   label: "Calender",
-  //   icon: <CalendarMonthIcon />,
-  // },
-  // {
-  //   link: "/kanban",
-  //   label: "Kanban",
-  //   icon: <ViewKanbanIcon />,
-  // },
-  // {
-  //   link: "/account",
-  //   label: "Account",
-  //   icon: <ManageAccountsIcon />,
-  // },
 ];
 export const mainListItems = (
   <React.Fragment>
@@ -66,4 +51,3 @@ export const mainListItems = (
     ))}
   </React.Fragment>
 );
-

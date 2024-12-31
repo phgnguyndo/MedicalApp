@@ -11,20 +11,11 @@ import { Stack } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchInput from "../../components/SearchInput";
 import { useForm } from "react-hook-form";
-
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
 type FormValues = {
-  id: string;
-  fullName: string;
-  gender: string;
-  phone: string;
-  email: string;
-  education: string;
-  specialist: string;
+  name: string;
+  license: number;
 };
 
 const Transition = React.forwardRef(function Transition(
@@ -36,17 +27,15 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function AddDoctorDialog({
-  mockData,
-  doctors,
-  setDoctors
-}: any) {
+export default function AddDoctorDialog({ doctors, setDoctors }: any) {
   const [open, setOpen] = React.useState(false);
+  const { contract, accountAddress } = React.useContext(AppContext);
 
   const {
     register,
+    reset,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<FormValues>();
 
   const handleClickOpen = () => {
@@ -54,13 +43,36 @@ export default function AddDoctorDialog({
   };
 
   const handleClose = () => {
+    reset();
     setOpen(false);
   };
 
-  const onSubmit = (data: FormValues) => {
-    data.id = doctors.length + 1;
-    setDoctors((prevState: any) => [...prevState, data]);
-    handleClose();
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const res = await contract.methods
+        .registerDoctor(data.name, data.license)
+        .send({ from: accountAddress, gas: 3000000 });
+      handleClose();
+      toast.success("Đăng ký chứng chỉ bác sĩ thành công", { autoClose: 1000 });
+    } catch (err) {
+      toast.error("Không đủ quyền đăng ký bác sĩ", { autoClose: 1000 });
+    }
+  };
+
+  const handleGetRole = async () => {
+    const res = await contract.methods.user(accountAddress).call();
+
+    if (parseInt(res) === 0) {
+      localStorage.setItem("role", "doctor");
+    }
+
+    if (parseInt(res) === 2) {
+      localStorage.setItem("role", "owner");
+    }
+
+    if (parseInt(res) === 1) {
+      localStorage.setItem("role", "patient");
+    }
   };
 
   return (
@@ -77,8 +89,9 @@ export default function AddDoctorDialog({
           startIcon={<AddIcon />}
           onClick={handleClickOpen}
         >
-          Add doctor
+          Đăng ký bác sĩ
         </Button>
+        <Button onClick={() => handleGetRole()}>Role</Button>
       </Stack>
 
       <Dialog
@@ -90,96 +103,45 @@ export default function AddDoctorDialog({
         sx={{ height: "100%" }}
       >
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogTitle>Add Dcotor</DialogTitle>
+          <DialogTitle>Đăng ký bác sĩ</DialogTitle>
 
           <DialogContent dividers>
             <TextField
               margin="dense"
-              id="fullName"
-              label="Full Name"
-              type="fullName"
+              id="name"
+              label="Tên bác sĩ"
+              type="name"
               fullWidth
               variant="outlined"
-              {...register("fullName", {
-                required: "Name is required"
+              {...register("name", {
+                required: "Vui lòng nhập tên bác sĩ",
               })}
-              error={!!errors.fullName}
-              helperText={errors.fullName?.message}
-            />
-            <FormControl fullWidth margin="dense">
-              <InputLabel id="gender">Gender</InputLabel>
-              <Select
-                labelId="gender"
-                id="gender"
-                label="Gender"
-                {...register("gender")}
-              >
-                <MenuItem value={"Male"}>Male</MenuItem>
-                <MenuItem value={"Female"}>Female</MenuItem>
-                <MenuItem value={"Other"}>Other</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              margin="dense"
-              id="phone"
-              label="Phone no"
-              type="phone"
-              fullWidth
-              variant="outlined"
-              placeholder="0 123456789"
-              {...register("phone", {
-                required: "Phone no is required"
-              })}
-              error={!!errors.phone}
-              helperText={errors.phone?.message}
+              error={!!errors.name}
+              helperText={errors.name?.message}
             />
             <TextField
-              margin="dense"
-              id="email"
-              label="Email Address"
-              type="email"
+              //required
               fullWidth
-              variant="outlined"
-              placeholder="ex: test@test.com"
-              {...register("email", {
-                required: "Email is required"
+              label="Chứng chỉ hành nghề"
+              type="number"
+              id="license"
+              placeholder="9838434"
+              //autoComplete="new-password"
+              {...register("license", {
+                required: "Vui lòng nhập chứng chỉ hành nghề",
+                pattern: {
+                  value: /^[0-9]+$/, // Ensure only numbers are allowed
+                  message: "Chỉ được nhập số",
+                },
               })}
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
-            <TextField
-              margin="dense"
-              id="education"
-              label="Education"
-              type="education"
-              fullWidth
-              variant="outlined"
-              placeholder="ex: MBBS, MD"
-              {...register("education", {
-                required: "Education is required"
-              })}
-              error={!!errors.education}
-              helperText={errors.education?.message}
-            />
-            <TextField
-              margin="dense"
-              id="specialist"
-              label="Specialist"
-              type="specialist"
-              fullWidth
-              variant="outlined"
-              placeholder="ex: Cardiologist, Dentist"
-              {...register("specialist", {
-                required: "Specialist is required"
-              })}
-              error={!!errors.specialist}
-              helperText={errors.specialist?.message}
+              error={!!errors.license}
+              helperText={errors.license?.message}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleClose}>Huỷ bỏ</Button>
             <Button type="submit" variant="contained">
-              Submit
+              Thêm mới
             </Button>
           </DialogActions>
         </form>

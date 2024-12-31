@@ -12,61 +12,131 @@ import {
   Divider,
   Paper,
   IconButton,
+  FormControl,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
 import Appbar from "../../components/Appbar";
 import { Link, useParams } from "react-router-dom";
+import avartar from "../../assets/avatar-blank.png";
+import React, { useEffect } from "react";
+import { AppContext } from "../context/AppContext";
+import { useForm } from "react-hook-form";
 
-const PatientInfoSchema = Yup.object().shape({
-  firstName: Yup.string().required("Required"),
-  lastName: Yup.string().required("Required"),
-  address: Yup.string().required("Required"),
-  phoneNumber: Yup.string()
-    .required("Required")
-    .matches(/^\d+$/, "Phone number must contain only digits"),
-  email: Yup.string().email("Invalid email").required("Required"),
-  age: Yup.number().required("Required").positive("Age must be positive"),
-  bloodGroup: Yup.string().required("Required"),
-  referredByDoctor: Yup.string().required("Required"),
-  referredByDoctorEmail: Yup.string().email("Invalid email"),
-  referredByDoctorPhoneNumber: Yup.string().matches(
-    /^\d+$/,
-    "Phone number must contain only digits"
-  ),
-  diseases: Yup.string().required("Required"),
-  patientHistory: Yup.string(),
-});
+type FormValues = {
+  name: string;
+  age: number;
+  gender: string;
+  bloodType: any;
+  allergies: string;
+  diagnosis: string;
+  treatment: string;
+  imageHash: string;
+};
 
 const PatientInfo = ({ patients }: any) => {
   const { id } = useParams<{ id: string }>();
-  const patient = patients?.find(
-    (patient: any) => patient.id === parseInt(id || "", 10)
-  );
+  const [open, setOpen] = React.useState(false);
+  const [file, setFile] = React.useState(null);
+  const { contract, accountAddress } = React.useContext(AppContext);
 
-  const initialValues = {
-    firstName: patient.firstName,
-    lastName: patient.lastName,
-    address: patient.address,
-    phoneNumber: patient.phoneNumber,
-    email: patient.email,
-    age: patient.age,
-    bloodGroup: patient.bloodGroup,
-    referredByDoctor: patient.referredByDoctor,
-    referredByDoctorEmail: patient.referredByDoctorEmail,
-    referredByDoctorPhoneNumber: patient.referredByDoctorPhoneNumber,
-    diseases: patient.diseases,
-    patientHistory: patient.patientHistory,
-  };
-  const handleSubmit = (values: any, { resetForm }: any) => {
-    console.log(values);
-    //resetForm();
+  const viewRecord = async () => {
+    if (id && accountAddress) {
+      try {
+        const res = await contract.methods.getRecord(accountAddress, id).call();
+        const recordJson = {
+          timestamp: res[0],
+          name: res[1],
+          age: res[2],
+          gender: res[3],
+          bloodType: res[4],
+          allergies: res[5],
+          diagnosis: res[6],
+          treatment: res[7],
+          imageHash: res[8],
+        };
+
+        console.log("Fetched record:", recordJson);
+        reset({
+          name: recordJson.name || undefined,
+          age: recordJson.age || 0,
+          gender: recordJson.gender || undefined,
+          bloodType: recordJson.bloodType || undefined,
+          allergies: recordJson.allergies || undefined,
+          diagnosis: recordJson.diagnosis || undefined,
+          treatment: recordJson.treatment || undefined,
+        });
+      } catch (error) {
+        console.error("Error fetching record:", error);
+      }
+    } else {
+      alert("Please provide a valid record ID.");
+    }
   };
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      name: undefined,
+      age: 0,
+      gender: undefined,
+      bloodType: undefined,
+      allergies: undefined,
+      diagnosis: undefined,
+      treatment: undefined,
+    },
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    reset();
+    setUrl(avartar);
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    console.log(data);
+    // const res = await contract.methods
+    //   .addRecord(
+    //     data.name,
+    //     data.age,
+    //     data.gender,
+    //     data.bloodType,
+    //     data.allergies,
+    //     data.diagnosis,
+    //     data.treatment,
+    //     ""
+    //   )
+    //   .send({ from: accountAddress, gas: 3000000 });
+    // // setPatients((prevState: any) => [...prevState, data]);
+    // handleClose();
+  };
+
+  const onImportFileClick = () => {
+    inputFile.current?.click();
+  };
+  const handleOnChangeFile = (e: any) => {
+    setFile(e.target.files[0]);
+    setUrl(URL.createObjectURL(e.target.files[0]));
+  };
+
+  // const [url, setUrl] = React.useState(data_detail?.avartar ? `${import.meta.env.VITE_BASE_URL}${data_detail.avartar}` : avartar)
+  const [url, setUrl] = React.useState<any>(avartar);
+  const inputFile = React.useRef<HTMLInputElement | null>(null);
+  const setInputFileRef = (node: HTMLInputElement | null) => {
+    inputFile.current = node;
+  };
+
+  useEffect(() => {
+    viewRecord();
+  }, [reset]);
   return (
     <Box sx={{ display: "flex" }}>
-      <Appbar appBarTitle="Patient Information" />
+      <Appbar appBarTitle="Thông tin chi tiết bệnh án" />
       <Box
         component="main"
         sx={{
@@ -82,229 +152,164 @@ const PatientInfo = ({ patients }: any) => {
         <Toolbar />
         <Container sx={{ mt: 4, mb: 4 }}>
           <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-            <Grid
-              container
-              spacing={2}
-              sx={{ marginleft: "10px", padding: "20px" }}
-            >
-              <IconButton component={Link} to="/patient-list" color="inherit">
-                <ArrowBackIcon />
-              </IconButton>
-              <Grid item xs={12}>
-                <Formik
-                  initialValues={initialValues}
-                  validationSchema={PatientInfoSchema}
-                  onSubmit={handleSubmit}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Grid container spacing={2}>
+                <Grid item xs={3}>
+                  <Box
+                    component="img"
+                    sx={{
+                      height: "100%",
+                      width: "100%",
+                    }}
+                    alt="image"
+                    src={url}
+                    style={{ cursor: "pointer" }}
+                    onClick={onImportFileClick}
+                  />
+
+                  <input
+                    type="file"
+                    id="file"
+                    ref={setInputFileRef}
+                    style={{ display: "none" }}
+                    onChange={(e) => handleOnChangeFile(e)}
+                  />
+                </Grid>
+                <Grid item xs={9}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="name"
+                        label="Tên bệnh nhân"
+                        type="fullName"
+                        fullWidth
+                        variant="outlined"
+                        {...register("name", {
+                          required: "Hãy nhập tên",
+                        })}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="age"
+                        label="Tuổi"
+                        type="age"
+                        fullWidth
+                        variant="outlined"
+                        placeholder="Nhập tuổi"
+                        {...register("age", {
+                          required: "Hãy nhập tuổi",
+                        })}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControl size="small" fullWidth margin="dense">
+                        <InputLabel id="gender">Gender</InputLabel>
+                        <Select
+                          labelId="gender"
+                          id="gender"
+                          label="Giới tính"
+                          {...register("gender")}
+                        >
+                          <MenuItem value={"male"}>Nam</MenuItem>
+                          <MenuItem value={"female"}>Nữ</MenuItem>
+                          <MenuItem value={"other"}>Khác</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="bloodType"
+                        label="Nhóm máu"
+                        type="bloodType"
+                        fullWidth
+                        variant="outlined"
+                        {...register("bloodType", {
+                          required: "Hãy nhập nhóm máu",
+                        })}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="allergies"
+                        label="Dị ứng"
+                        type="allergies"
+                        fullWidth
+                        variant="outlined"
+                        {...register("allergies")}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="diagnosis"
+                        label="Chuẩn đoán"
+                        type="diagnosis"
+                        fullWidth
+                        variant="outlined"
+                        placeholder="ex: 18"
+                        {...register("diagnosis", {
+                          required: "Hãy nhập chuẩn đoán",
+                        })}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        size="small"
+                        margin="dense"
+                        id="treatment"
+                        label="Phương pháp điều trị"
+                        type="treatment"
+                        fullWidth
+                        variant="outlined"
+                        placeholder="ex: Dr. Smith"
+                        {...register("treatment", {
+                          required: "Hãy nhập phương pháp điều trị",
+                        })}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
+                <Grid item xs={9}></Grid>
+                <Grid
+                  item
+                  xs={3}
+                  style={{ display: "flex", justifyContent: "flex-end" }}
                 >
-                  {({ errors, touched }) => (
-                    <Form>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <Field
-                            as={TextField}
-                            name="firstName"
-                            label="First Name"
-                            fullWidth
-                            error={errors.firstName && touched.firstName}
-                            helperText={touched.firstName && errors.firstName}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field
-                            as={TextField}
-                            name="lastName"
-                            label="Last Name"
-                            fullWidth
-                            error={errors.lastName && touched.lastName}
-                            helperText={touched.lastName && errors.lastName}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            name="address"
-                            label="Address"
-                            fullWidth
-                            error={errors.address && touched.address}
-                            helperText={touched.address && errors.address}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field
-                            as={TextField}
-                            name="phoneNumber"
-                            label="Phone Number"
-                            fullWidth
-                            error={errors.phoneNumber && touched.phoneNumber}
-                            helperText={
-                              touched.phoneNumber && errors.phoneNumber
-                            }
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field
-                            as={TextField}
-                            name="email"
-                            label="Email"
-                            fullWidth
-                            error={errors.email && touched.email}
-                            helperText={touched.email && errors.email}
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Field
-                            as={TextField}
-                            name="age"
-                            label="Age"
-                            fullWidth
-                            error={touched.age && Boolean(errors.age)}
-                            helperText={touched.age && errors.age}
-                          />
-                        </Grid>
-                      </Grid>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <InputLabel
-                            id="blood-group-label"
-                            sx={{ align: "left" }}
-                          >
-                            Blood Group
-                          </InputLabel>
-                          <Select
-                            name="bloodGroup"
-                            labelId="blood-group-label"
-                            // value={values.bloodGroup}
-                            // onChange={handleChange}
-                            error={
-                              touched.bloodGroup && Boolean(errors.bloodGroup)
-                            }
-                            fullWidth
-                          >
-                            <MenuItem value="">Select blood group</MenuItem>
-                            <MenuItem value="A+">A+</MenuItem>
-                            <MenuItem value="A-">A-</MenuItem>
-                            <MenuItem value="B+">B+</MenuItem>
-                            <MenuItem value="B-">B-</MenuItem>
-                            <MenuItem value="AB+">AB+</MenuItem>
-                            <MenuItem value="AB-">AB-</MenuItem>
-                            <MenuItem value="O+">O+</MenuItem>
-                            <MenuItem value="O-">O-</MenuItem>
-                          </Select>
-                          {touched.bloodGroup && errors.bloodGroup && (
-                            <Box mt={1} color="red">
-                              {Object.values(errors.bloodGroup).map(
-                                (error: any, index) => (
-                                  <div key={index}>{error}</div>
-                                )
-                              )}
-                            </Box>
-                          )}
-                        </Grid>
-
-                        <Divider />
-
-                        <Grid item xs={12}>
-                          <Typography variant="h6" align="left">
-                            Referred by Doctor:
-                          </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Field
-                            as={TextField}
-                            name="referredByDoctor"
-                            label="Doctor's Name"
-                            fullWidth
-                            error={
-                              errors.referredByDoctor &&
-                              touched.referredByDoctor
-                            }
-                            helperText={
-                              touched.referredByDoctor &&
-                              errors.referredByDoctor
-                            }
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            name="doctorEmail"
-                            // value={values.doctorEmail}
-                            // onChange={handleChange}
-                            label="Doctor's Email"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            name="doctorPhone"
-                            // value={values.doctorPhone}
-                            // onChange={handleChange}
-                            label="Doctor's Phone"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Diseases"
-                            name="diseases"
-                            // value={values.diseases}
-                            // onChange={handleChange}
-                            // onBlur={handleBlur}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Patient History"
-                            name="patientHistory"
-                            // value={values.patientHistory}
-                            // onChange={handleChange}
-                            // onBlur={handleBlur}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Attachments"
-                            name="attachments"
-                            // value={values.attachments}
-                            // onChange={handleChange}
-                            // onBlur={handleBlur}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label="Handled By"
-                            name="handledBy"
-                            // value={values.handledBy}
-                            // onChange={handleChange}
-                            // onBlur={handleBlur}
-                            fullWidth
-                          />
-                        </Grid>
-                      </Grid>
-                      <br />
-                      <Grid container justifyContent="flex-end">
-                        <Grid item xs={1} sm={1}>
-                          <Button
-                            component={Link}
-                            to="/patient-list"
-                            color="inherit"
-                          >
-                            Cancel
-                          </Button>
-                        </Grid>
-                        <Grid item xs={1} sm={1}>
-                          <Button type="submit" variant="contained">
-                            Save
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    </Form>
-                  )}
-                </Formik>
+                  <Button onClick={handleClose}>Huỷ</Button>
+                  <Button type="submit" variant="contained">
+                    Lưu
+                  </Button>
+                </Grid>
               </Grid>
-            </Grid>
+            </form>
           </Paper>
         </Container>
       </Box>
