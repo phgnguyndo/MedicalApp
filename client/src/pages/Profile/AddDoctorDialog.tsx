@@ -59,21 +59,21 @@ export default function AddDoctorDialog({ doctors, setDoctors }: any) {
     }
   };
 
-  const handleGetRole = async () => {
-    const res = await contract.methods.user(accountAddress).call();
+  // const handleGetRole = async () => {
+  //   const res = await contract.methods.user(accountAddress).call();
 
-    if (parseInt(res) === 0) {
-      localStorage.setItem("role", "doctor");
-    }
+  //   if (parseInt(res) === 0) {
+  //     localStorage.setItem("role", "doctor");
+  //   }
 
-    if (parseInt(res) === 2) {
-      localStorage.setItem("role", "owner");
-    }
+  //   if (parseInt(res) === 2) {
+  //     localStorage.setItem("role", "owner");
+  //   }
 
-    if (parseInt(res) === 1) {
-      localStorage.setItem("role", "patient");
-    }
-  };
+  //   if (parseInt(res) === 1) {
+  //     localStorage.setItem("role", "patient");
+  //   }
+  // };
 
   return (
     <div>
@@ -91,7 +91,7 @@ export default function AddDoctorDialog({ doctors, setDoctors }: any) {
         >
           Đăng ký bác sĩ
         </Button>
-        <Button onClick={() => handleGetRole()}>Role</Button>
+        {/* <Button onClick={() => handleGetRole()}>Role</Button> */}
       </Stack>
 
       <Dialog

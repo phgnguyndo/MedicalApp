@@ -14,9 +14,24 @@ import {
 import { Avatar, Grid, Box } from "@mui/material";
 import { mockDoctorsData } from "../../mockData";
 import AddDoctorDialog from "./AddDoctorDialog";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { List } from "echarts";
 
+interface Doctor {
+  name: string;
+  hname: string;
+  faculty: string;
+  contract: string;
+}
 export default function DoctorList() {
-  const [doctors, setDoctors] = React.useState(mockDoctorsData);
+  const [doctors, setDoctors] = React.useState<Doctor[]>([]);
+
+  const handleDelete = (id: any) => {};
+
+  const getAllDoctor = () => {};
+  React.useEffect(() => {
+    getAllDoctor();
+  }, []);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -48,11 +63,11 @@ export default function DoctorList() {
                   <TableRow>
                     {/* <TableCell align="center">#</TableCell> */}
                     <TableCell></TableCell>
-                    <TableCell>DOCTOR NAME</TableCell>
-                    <TableCell>SPECIALIST</TableCell>
-                    <TableCell>SEX</TableCell>
-                    <TableCell>PHONE NO</TableCell>
-                    <TableCell>EDUCATION</TableCell>
+                    <TableCell>Tên bác sĩ</TableCell>
+                    <TableCell>Bệnh viện</TableCell>
+                    <TableCell>Khoa</TableCell>
+                    <TableCell>Liên hệ</TableCell>
+                    <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -71,11 +86,20 @@ export default function DoctorList() {
                             }}
                           />
                         </TableCell>
-                        <TableCell>{doctor.fullName}</TableCell>
-                        <TableCell>{doctor.specialist}</TableCell>
-                        <TableCell>{doctor.gender}</TableCell>
-                        <TableCell>{doctor.phone}</TableCell>
-                        <TableCell>{doctor.education}</TableCell>
+                        <TableCell>{doctor?.name || ""}</TableCell>
+                        <TableCell>{doctor?.hname || ""}</TableCell>
+                        <TableCell>{doctor?.faculty || ""}</TableCell>
+                        <TableCell>{doctor?.contact || ""}</TableCell>
+                        <TableCell>
+                          <DeleteOutlineOutlinedIcon
+                            sx={{
+                              color: "red",
+                              cursor: "pointer",
+                              marginRight: "5px",
+                            }}
+                            onClick={() => handleDelete(doctor.id)}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
