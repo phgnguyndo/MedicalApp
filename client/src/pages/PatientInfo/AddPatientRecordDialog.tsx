@@ -78,6 +78,13 @@ export default function AddPatientRecordDialog({
   };
 
   const onSubmit = async (data: FormValues) => {
+    //get info docter
+    const docterInfo = await contract.methods
+      .getDoctorByAddress(accountAddress)
+      .call();
+    let docketName = "";
+    if (docterInfo) docketName = docterInfo[1];
+    console.log(docketName);
     try {
       // upload file ipfs
       const formData = new FormData();
@@ -98,6 +105,7 @@ export default function AddPatientRecordDialog({
         const formattedDate = dayjs(data._visitedDate).format("DD-MM-YYYY");
         const dataSubmit = {
           ...data,
+          _dname: docketName,
           _ipfs: data_ipfs["Hash"],
           addr: patientInfo?.address,
           _visitedDate: formattedDate,
@@ -190,7 +198,7 @@ export default function AddPatientRecordDialog({
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  {/* <Grid item xs={6}>
                     <TextField
                       margin="dense"
                       id="_dname"
@@ -204,8 +212,8 @@ export default function AddPatientRecordDialog({
                       // error={!!errors.name}
                       helperText={errors._dname?.message}
                     />
-                  </Grid>
-                  <Grid item xs={6}>
+                  </Grid> */}
+                  <Grid item xs={8}>
                     <TextField
                       margin="dense"
                       id="_reason"
