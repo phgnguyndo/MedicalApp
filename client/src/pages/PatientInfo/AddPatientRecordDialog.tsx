@@ -24,6 +24,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import { serverConfig } from "../../config/serverConfig";
 type FormValues = {
   _dname: string;
   _reason: string;
@@ -41,10 +43,18 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function AddPatientRecordDialog({ patientInfo }: any) {
+export default function AddPatientRecordDialog({
+  patientInfo,
+  getAllPatientRecord,
+}: any) {
   const [open, setOpen] = React.useState(false);
   const [file, setFile] = React.useState(null);
   const { contract, accountAddress } = React.useContext(AppContext);
+  const [files, setFiles] = React.useState<File[]>([]);
+  const [urls, setUrls] = React.useState<string[]>([]);
+  const [showIcon, setShowIcon] = React.useState<boolean>(true);
+
+  const inputFile = React.useRef<HTMLInputElement | null>(null);
 
   const {
     register,
@@ -63,32 +73,56 @@ export default function AddPatientRecordDialog({ patientInfo }: any) {
     reset();
     // setUrl(avartar);
     setUrls([]);
+    setFiles([]);
     setShowIcon(true);
   };
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const formattedDate = dayjs(data._visitedDate).format("DD-MM-YYYY");
-      const dataSubmit = {
-        ...data,
-        _ipfs: "uhefefef",
-        addr: patientInfo?.address,
-        _visitedDate: formattedDate,
-      };
-      const res = await contract.methods
-        .addRecord(
-          dataSubmit._dname,
-          dataSubmit._reason,
-          dataSubmit._visitedDate,
-          dataSubmit._ipfs,
-          dataSubmit.addr
-        )
-        .send({ from: accountAddress, gas: 3000000 });
-
-      toast.success("Thêm mới bệnh án thành công", {
-        autoClose: 1000,
+      // upload file ipfs
+      const formData = new FormData();
+      if (files.length === 0) {
+        toast.error("Vui lòng nhập file", {
+          autoClose: false,
+        });
+      }
+      formData.append("benhan", files[0]);
+      const response = await fetch(`${serverConfig.server_ipfs}/api/v0/add`, {
+        method: "POST",
+        body: formData, // Send form data
       });
-      handleClose();
+      const data_ipfs = await response.json();
+      console.log(data_ipfs);
+
+      if (response.status === 200) {
+        const formattedDate = dayjs(data._visitedDate).format("DD-MM-YYYY");
+        const dataSubmit = {
+          ...data,
+          _ipfs: data_ipfs["Hash"],
+          addr: patientInfo?.address,
+          _visitedDate: formattedDate,
+        };
+        console.log(dataSubmit);
+        const res = await contract.methods
+          .addRecord(
+            dataSubmit._dname,
+            dataSubmit._reason,
+            dataSubmit._visitedDate,
+            dataSubmit._ipfs,
+            dataSubmit.addr
+          )
+          .send({ from: accountAddress, gas: 3000000 });
+
+        getAllPatientRecord();
+        toast.success("Thêm mới bệnh án thành công", {
+          autoClose: 1000,
+        });
+        handleClose();
+      } else {
+        toast.error("Thêm mới bệnh án thất bại", {
+          autoClose: 1000,
+        });
+      }
     } catch (err) {
       toast.error("Thêm mới bệnh án thất bại", {
         autoClose: 1000,
@@ -97,20 +131,6 @@ export default function AddPatientRecordDialog({ patientInfo }: any) {
     }
   };
 
-  // const onImportFileClick = () => {
-  //   inputFile.current?.click();
-  // };
-  // const handleOnChangeFile = (e: any) => {
-  //   setFile(e.target.files[0]);
-  //   setUrl(URL.createObjectURL(e.target.files[0]));
-  // };
-
-  // // const [url, setUrl] = React.useState(data_detail?.avartar ? `${import.meta.env.VITE_BASE_URL}${data_detail.avartar}` : avartar)
-  // const [url, setUrl] = React.useState<any>(avartar);
-  // const inputFile = React.useRef<HTMLInputElement | null>(null);
-  // const setInputFileRef = (node: HTMLInputElement | null) => {
-  //   inputFile.current = node;
-  // };
   const onImportFileClick = () => {
     inputFile.current?.click();
   };
@@ -118,20 +138,16 @@ export default function AddPatientRecordDialog({ patientInfo }: any) {
   const handleOnChangeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      const newUrls = filesArray.map((file) => URL.createObjectURL(file));
+      const fileNames = filesArray.map((file) => file.name);
 
       setFiles((prevFiles) => [...prevFiles, ...filesArray]);
-      setUrls((prevUrls) => [...prevUrls, ...newUrls]);
+      setUrls((prevUrls) => [...prevUrls, ...fileNames]);
       setShowIcon(false);
     }
   };
 
   // State to store files and their URLs
-  const [files, setFiles] = React.useState<File[]>([]);
-  const [urls, setUrls] = React.useState<string[]>([]);
-  const [showIcon, setShowIcon] = React.useState<boolean>(true);
 
-  const inputFile = React.useRef<HTMLInputElement | null>(null);
   const setInputFileRef = (node: HTMLInputElement | null) => {
     inputFile.current = node;
   };
@@ -170,28 +186,6 @@ export default function AddPatientRecordDialog({ patientInfo }: any) {
 
           <DialogContent dividers>
             <Grid container spacing={2}>
-              {/* <Grid item xs={3}>
-                <Box
-                  component="img"
-                  sx={{
-                    height: "100%",
-                    width: "100%",
-                  }}
-                  alt="image"
-                  src={url}
-                  style={{ cursor: "pointer" }}
-                  onClick={onImportFileClick}
-                />
-
-                <input
-                  type="file"
-                  id="file"
-                  ref={setInputFileRef}
-                  style={{ display: "none" }}
-                  onChange={(e) => handleOnChangeFile(e)}
-                />
-              </Grid> */}
-
               <Grid item xs={12}>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
@@ -240,48 +234,32 @@ export default function AddPatientRecordDialog({ patientInfo }: any) {
                   </Grid>
                 </Grid>
               </Grid>
-              <Grid style={{ marginTop: "4px" }} item xs={12}>
-                <Grid container spacing={2}>
+              <Grid style={{ marginTop: "10px" }} item xs={12}>
+                <Grid
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                  container
+                  spacing={2}
+                >
                   {urls.map((url, index) => (
-                    // <Grid item xs={3} key={index}>
-                    <Box
-                      component="img"
-                      sx={{
-                        height: "70px",
-                        width: "55p",
-                        margin: "2px",
-                        marginTop: "4px",
-                      }}
-                      alt={`image-${index}`}
-                      src={url}
-                      style={{ cursor: "pointer" }}
-                      onClick={onImportFileClick}
-                    />
-                    // </Grid>
+                    <Grid item xs={12} key={index}>
+                      <span style={{ color: "rgb(102, 179, 255)" }}>{url}</span>{" "}
+                    </Grid>
                   ))}
 
                   {/* Hiển thị icon upload nếu chưa có ảnh */}
                   {showIcon && (
-                    <Grid item xs={3}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          height: "100px",
-                          width: "100px",
-                          border: "2px dashed gray",
-                          borderRadius: "8px",
-                          cursor: "pointer",
-                        }}
-                        onClick={onImportFileClick}
-                      >
-                        <i
-                          className="fas fa-upload"
-                          style={{ fontSize: "24px", color: "gray" }}
-                        ></i>
-                      </Box>
-                    </Grid>
+                    <CloudUploadOutlinedIcon
+                      sx={{
+                        fontSize: "60px",
+                        opacity: 0.7,
+                        cursor: "pointer",
+                      }}
+                      onClick={onImportFileClick}
+                    />
                   )}
 
                   <input

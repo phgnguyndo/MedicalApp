@@ -26,41 +26,9 @@ import AddPatientRecordDialog from "./AddPatientRecordDialog";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
 import ModalViewFile from "./ModalViewFile";
-
-const infoData = [
-  {
-    icon: <EmailIcon />,
-    title: "Email",
-    value: "test@test.com",
-  },
-  {
-    icon: <PhoneIcon />,
-    title: "Contact no",
-    value: "+11 123456789",
-  },
-  {
-    icon: <PeopleIcon />,
-    title: "Successful Patients",
-    value: "200",
-  },
-  {
-    icon: <MedicalServicesIcon />,
-    title: "Experience",
-    value: "10+ years",
-  },
-];
-
-const profileData = {
-  avatarUrl: "https://i.pravatar.cc/300",
-  name: "Dr. John Doe",
-  specialization: "Cardiologist",
-  email: "john.doe@example.com",
-  contactNo: "+1 123-456-7890",
-  experience: "10 years",
-  patients: "1000+",
-  biography:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor velit eu orci aliquam ultrices. Etiam quis purus euismod, faucibus leo eu, vestibulum odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor velit eu orci aliquam ultrices. Etiam quis purus euismod, faucibus leo eu, vestibulum odio.",
-};
+import { serverConfig } from "../../config/serverConfig";
+import { toast } from "react-toastify";
+import { fileTypeFromBuffer } from "file-type";
 
 export default function DetailPatient() {
   const { id } = useParams<{ id: string }>();
@@ -68,6 +36,8 @@ export default function DetailPatient() {
   const [infoPatient, setInfoPatient] = React.useState<any>();
   const [patientRecord, setPatientRecord] = React.useState<any>([]);
   const [isOpenDetailRecord, setIsOpenDetailRecord] = React.useState(false);
+  const [hash, setHashFile] = React.useState();
+
   const handleCloseDetailReacord = () => {
     setIsOpenDetailRecord(false);
   };
@@ -83,11 +53,13 @@ export default function DetailPatient() {
               dname: dnames[index],
               reason: reasons[index],
               visitedDate: visitedDates[index],
+              hash: ipfsHashes[index],
             };
           })
         : [];
 
       setPatientRecord(data);
+      console.log(data);
     } catch (err) {
       console.error(err);
     }
@@ -114,7 +86,41 @@ export default function DetailPatient() {
     getDetailPatient();
   }, [id]);
 
-  const handleDownloadfile = (hash: any) => {};
+  const handleDownloadfile = async (hash: any) => {
+    try {
+      const response = await fetch(
+        `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+      );
+      const arrayBuffer = await response.arrayBuffer();
+
+      console.log(arrayBuffer);
+
+      //check typ file
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const type: any = await fileTypeFromBuffer(uint8Array);
+      let name = "";
+      if (type?.ext === "pdf") {
+        name = "benhan.pdf";
+      } else {
+        name = "benhan.docx";
+      }
+      const blob = new Blob([arrayBuffer]);
+      console.log(blob);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      console.log(url);
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Tải file thành công", { autoClose: 1000 });
+    } catch (error) {
+      console.log(error);
+      toast.error("Tải file thất bại", { autoClose: 1000 });
+    }
+  };
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar
@@ -125,6 +131,7 @@ export default function DetailPatient() {
       <ModalViewFile
         isOpen={isOpenDetailRecord}
         handleClose={handleCloseDetailReacord}
+        hash={hash}
       />
       <Box
         component="main"
@@ -237,7 +244,10 @@ export default function DetailPatient() {
                       spacing={2}
                       sx={{ marginleft: "10px", marginTop: "0px" }}
                     >
-                      <AddPatientRecordDialog patientInfo={infoPatient} />
+                      <AddPatientRecordDialog
+                        getAllPatientRecord={getAllPatientRecord}
+                        patientInfo={infoPatient}
+                      />
                       <TableContainer component={Paper}>
                         <Table
                           sx={{ minWidth: 650 }}
@@ -278,7 +288,7 @@ export default function DetailPatient() {
                                           marginRight: "5px",
                                         }}
                                         onClick={() =>
-                                          handleDownloadfile(doctor.address)
+                                          handleDownloadfile(doctor.hash)
                                         }
                                       />
                                     )}
@@ -291,9 +301,10 @@ export default function DetailPatient() {
                                           cursor: "pointer",
                                           marginRight: "5px",
                                         }}
-                                        onClick={() =>
-                                          setIsOpenDetailRecord(true)
-                                        }
+                                        onClick={() => {
+                                          setIsOpenDetailRecord(true);
+                                          setHashFile(doctor.hash);
+                                        }}
                                       />
                                     )}
                                   </TableCell>

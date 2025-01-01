@@ -58,7 +58,7 @@ const loadWeb3 = async (addess, setContract) => {
     const web3 = new Web3(provider);
     const instance = new web3.eth.Contract(
       ElectionContract.abi,
-      "0x9FB4bd2F14fdbE5F201a78629C3bBf16E9c60A48"
+      "0xe842496d708ffc27057d2E074D65a08a87f58153"
     );
     const res = await instance.methods.user(addess).call();
     console.log("check role", res);

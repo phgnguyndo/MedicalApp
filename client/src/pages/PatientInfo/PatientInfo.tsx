@@ -143,10 +143,10 @@ const PatientInfo = ({ patients }: any) => {
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar appBarTitle="Thông tin chi tiết bệnh nhân" />
-      <ModalViewFile
+      {/* <ModalViewFile
         isOpen={isOpenDetailRecord}
         handleClose={handleCloseDetailReacord}
-      />
+      /> */}
       <Box
         component="main"
         sx={{

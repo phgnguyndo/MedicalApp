@@ -4,20 +4,54 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
+import DocViewer, {
+  DocViewerRenderers,
+  PDFRenderer,
+} from "@cyntler/react-doc-viewer";
+import { serverConfig } from "../../config/serverConfig";
+import { renderAsync } from "docx-preview";
+import { fileTypeFromBuffer } from "file-type";
+import { pdfjs } from "react-pdf";
 
-export default function ModalViewFile({ isOpen, handleClose }) {
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.js",
+  import.meta.url
+).toString();
+
+export default function ModalViewFile({ hash, isOpen, handleClose }) {
+  console.log(`${serverConfig.server_download_ipfs}/ipfs/${hash}`);
+  const [fileType, setFileType] = React.useState(null);
+  const viewerRef = React.useRef(null);
+  const fetchFile = async () => {
+    const response = await fetch(
+      `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch the file");
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const type = await fileTypeFromBuffer(uint8Array);
+    setFileType(type["ext"]);
+    if (type["ext"] === "docx" || type["ext"] === "doc") {
+      renderAsync(arrayBuffer, viewerRef.current).catch((error) => {
+        console.error(error);
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (hash) {
+      fetchFile();
+    }
+  }, [hash]);
+
   const docs = [
-    // {
-    //   uri: `https://drive.usercontent.google.com/download?id=144aJHlbMiY33FNctj0bZdOIUiKMnG6VL&export=download&authuser=0&confirm=t&uuid=144e3544-7c19-4a68-943f-eda5686a47c8&at=APvzH3q_8EfAEXoK6PHpjPNc3ax3:1735696824768`,
-    //   fileType: "docx",
-    //   fileName: "demo.docx",
-    // },
     {
       //   uri: require("../../assets/a.pdf"),
-      uri: "http://localhost:3000/NguyenHoangNam_CNTT_proof_stake.pdf",
+      uri: `${serverConfig.server_download_ipfs}/ipfs/${hash}`,
       fileType: "pdf",
-      fileName: "demo.pdf",
+      fileName: "bệnh án",
     },
   ];
 
@@ -32,7 +66,28 @@ export default function ModalViewFile({ isOpen, handleClose }) {
       <DialogTitle>Xem chi tiết bệnh án</DialogTitle>
 
       <DialogContent dividers>
-        <DocViewer documents={docs} pluginRenderers={DocViewerRenderers} />
+        {fileType === "pdf" ? (
+          <DocViewer documents={docs} pluginRenderers={[PDFRenderer]} />
+        ) : (
+          ""
+        )}
+
+        <div
+          ref={viewerRef}
+          style={{
+            border: "1px solid #ccc",
+            padding: "16px",
+            height: "500px",
+            overflow: "scroll",
+          }}
+        ></div>
+        {/* {fileType === "pdf" ? (
+          <Document
+            file={`${serverConfig.server_download_ipfs}/ipfs/${hash}`}
+          />
+        ) : (
+          ""
+        )} */}
       </DialogContent>
       <DialogActions>
         <Button variant="contained" onClick={handleClose}>
