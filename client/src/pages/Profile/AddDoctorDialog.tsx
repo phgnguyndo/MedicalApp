@@ -50,11 +50,15 @@ export default function AddDoctorDialog({ doctors, setDoctors }: any) {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const res = await contract.methods
-        .registerDoctor(data.name, data.license)
-        .send({ from: accountAddress, gas: 3000000 });
-      handleClose();
-      toast.success("Đăng ký chứng chỉ bác sĩ thành công", { autoClose: 1000 });
+      if (contract) {
+        const res = await contract?.methods
+          .registerDoctor(data.name, data.license)
+          .send({ from: accountAddress, gas: 3000000 });
+        handleClose();
+        toast.success("Đăng ký chứng chỉ bác sĩ thành công", {
+          autoClose: 1000,
+        });
+      }
     } catch (err) {
       toast.error("Không đủ quyền đăng ký bác sĩ", { autoClose: 1000 });
     }

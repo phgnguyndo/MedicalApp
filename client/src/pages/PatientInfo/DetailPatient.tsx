@@ -44,22 +44,24 @@ export default function DetailPatient() {
 
   const getAllPatientRecord = async () => {
     try {
-      console.log("check id", id);
-      const res = await contract.methods.getAllPatientRecords(id).call();
-      const { ids, dnames, ipfsHashes, reasons, visitedDates } = res;
-      const data = Array.isArray(dnames)
-        ? dnames.map((item, index) => {
-            return {
-              dname: dnames[index],
-              reason: reasons[index],
-              visitedDate: visitedDates[index],
-              hash: ipfsHashes[index],
-            };
-          })
-        : [];
+      if (contract) {
+        console.log("check id", id);
+        const res = await contract?.methods.getAllPatientRecords(id).call();
+        const { ids, dnames, ipfsHashes, reasons, visitedDates } = res;
+        const data = Array.isArray(dnames)
+          ? dnames.map((item, index) => {
+              return {
+                dname: dnames[index],
+                reason: reasons[index],
+                visitedDate: visitedDates[index],
+                hash: ipfsHashes[index],
+              };
+            })
+          : [];
 
-      setPatientRecord(data);
-      console.log(data);
+        setPatientRecord(data);
+        console.log(data);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -67,16 +69,18 @@ export default function DetailPatient() {
 
   const getDetailPatient = async () => {
     try {
-      const res = await contract.methods.getPatientDetails(id).call();
-      const data = {
-        name: res["_name"],
-        gender: res["_gender"] === "male" ? "Nam" : "Nữ",
-        phone: res["_phone"],
-        dob: res["_dob"],
-        address: id,
-        bloodgroup: res["_bloodgroup"],
-      };
-      setInfoPatient(data);
+      if (contract) {
+        const res = await contract?.methods.getPatientDetails(id).call();
+        const data = {
+          name: res["_name"],
+          gender: res["_gender"] === "male" ? "Nam" : "Nữ",
+          phone: res["_phone"],
+          dob: res["_dob"],
+          address: id,
+          bloodgroup: res["_bloodgroup"],
+        };
+        setInfoPatient(data);
+      }
     } catch (error) {
       console.error("Error fetching record:", error);
     }

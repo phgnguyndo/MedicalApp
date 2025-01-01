@@ -60,7 +60,7 @@ const loadWeb3 = async (addess, setContract) => {
       ElectionContract.abi,
       "0xe842496d708ffc27057d2E074D65a08a87f58153"
     );
-    const res = await instance.methods.user(addess).call();
+    const res = await instance?.methods.user(addess).call();
     console.log("check role", res);
     if (parseInt(res) === 0) {
       localStorage.setItem("role", "doctor");

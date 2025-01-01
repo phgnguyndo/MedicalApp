@@ -50,20 +50,22 @@ export default function SignUpPatient({ type }: any) {
         ...data,
         dob: formattedDate,
       };
-      const res = await contract.methods
-        .addPatient(
-          data.name,
-          data.phone,
-          data.gender,
-          data.dob,
-          data.bloodGroup
-        )
-        .send({ from: accountAddress, gas: 3000000 });
-      localStorage.setItem("role", "patient");
-      navigate(`/dashboard`);
-      toast.success("Đăng ký tài khoản bệnh nhân thành công", {
-        autoClose: 1000,
-      });
+      if (contract) {
+        const res = await contract?.methods
+          .addPatient(
+            data.name,
+            data.phone,
+            data.gender,
+            data.dob,
+            data.bloodGroup
+          )
+          .send({ from: accountAddress, gas: 3000000 });
+        localStorage.setItem("role", "patient");
+        navigate(`/dashboard`);
+        toast.success("Đăng ký tài khoản bệnh nhân thành công", {
+          autoClose: 1000,
+        });
+      }
     } catch (error) {
       console.log(error);
       toast.error("Đăng ký tài khoản bệnh nhân  thất bại", { autoClose: 1000 });

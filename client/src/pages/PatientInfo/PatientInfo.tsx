@@ -50,29 +50,33 @@ const PatientInfo = ({ patients }: any) => {
   const viewRecord = async () => {
     if (id && accountAddress) {
       try {
-        const res = await contract.methods.getRecord(accountAddress, id).call();
-        const recordJson = {
-          timestamp: res[0],
-          name: res[1],
-          age: res[2],
-          gender: res[3],
-          bloodType: res[4],
-          allergies: res[5],
-          diagnosis: res[6],
-          treatment: res[7],
-          imageHash: res[8],
-        };
+        if (contract) {
+          const res = await contract?.methods
+            .getRecord(accountAddress, id)
+            .call();
+          const recordJson = {
+            timestamp: res[0],
+            name: res[1],
+            age: res[2],
+            gender: res[3],
+            bloodType: res[4],
+            allergies: res[5],
+            diagnosis: res[6],
+            treatment: res[7],
+            imageHash: res[8],
+          };
 
-        console.log("Fetched record:", recordJson);
-        reset({
-          name: recordJson.name || undefined,
-          age: recordJson.age || 0,
-          gender: recordJson.gender || undefined,
-          bloodType: recordJson.bloodType || undefined,
-          allergies: recordJson.allergies || undefined,
-          diagnosis: recordJson.diagnosis || undefined,
-          treatment: recordJson.treatment || undefined,
-        });
+          console.log("Fetched record:", recordJson);
+          reset({
+            name: recordJson.name || undefined,
+            age: recordJson.age || 0,
+            gender: recordJson.gender || undefined,
+            bloodType: recordJson.bloodType || undefined,
+            allergies: recordJson.allergies || undefined,
+            diagnosis: recordJson.diagnosis || undefined,
+            treatment: recordJson.treatment || undefined,
+          });
+        }
       } catch (error) {
         console.error("Error fetching record:", error);
       }

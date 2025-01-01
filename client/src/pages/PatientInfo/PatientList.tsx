@@ -67,27 +67,29 @@ function PatientList({ data }: any) {
   const handleDelete = async (id: any) => {
     // const updatedPatients = patients.filter((patient: any) => patient.id!== id);
     // setPatients(updatedPatients);
-    await contract.methods.deleteRecord(id).send({ from: accountAddress });
+    await contract?.methods.deleteRecord(id).send({ from: accountAddress });
   };
 
   const getAllPatient = async () => {
-    const res = await contract.methods.getAllPatients().call();
-    const { ids, names, phones, genders, dobs, bloodgroups, addresses } = res;
-    console.log(addresses);
-    const data = Array.isArray(ids)
-      ? ids.map((item, index) => {
-          return {
-            id: item,
-            name: names[index],
-            phone: phones[index],
-            gender: genders[index],
-            dob: dobs[index],
-            bloodgroup: bloodgroups[index],
-            address: addresses[index],
-          };
-        })
-      : [];
-    setPatients(data);
+    if (contract) {
+      const res = await contract?.methods.getAllPatients().call();
+      const { ids, names, phones, genders, dobs, bloodgroups, addresses } = res;
+      console.log(addresses);
+      const data = Array.isArray(ids)
+        ? ids.map((item, index) => {
+            return {
+              id: item,
+              name: names[index],
+              phone: phones[index],
+              gender: genders[index],
+              dob: dobs[index],
+              bloodgroup: bloodgroups[index],
+              address: addresses[index],
+            };
+          })
+        : [];
+      setPatients(data);
+    }
   };
 
   useEffect(() => {

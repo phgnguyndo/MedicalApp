@@ -103,20 +103,22 @@ export default function AddPatientRecordDialog({
           _visitedDate: formattedDate,
         };
         console.log(dataSubmit);
-        const res = await contract.methods
-          .addRecord(
-            dataSubmit._dname,
-            dataSubmit._reason,
-            dataSubmit._visitedDate,
-            dataSubmit._ipfs,
-            dataSubmit.addr
-          )
-          .send({ from: accountAddress, gas: 3000000 });
+        if (contract) {
+          const res = await contract?.methods
+            .addRecord(
+              dataSubmit._dname,
+              dataSubmit._reason,
+              dataSubmit._visitedDate,
+              dataSubmit._ipfs,
+              dataSubmit.addr
+            )
+            .send({ from: accountAddress, gas: 3000000 });
 
-        getAllPatientRecord();
-        toast.success("Thêm mới bệnh án thành công", {
-          autoClose: 1000,
-        });
+          getAllPatientRecord();
+          toast.success("Thêm mới bệnh án thành công", {
+            autoClose: 1000,
+          });
+        }
         handleClose();
       } else {
         toast.error("Thêm mới bệnh án thất bại", {
