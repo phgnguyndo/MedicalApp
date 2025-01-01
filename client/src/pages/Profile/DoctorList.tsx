@@ -14,9 +14,59 @@ import {
 import { Avatar, Grid, Box } from "@mui/material";
 import { mockDoctorsData } from "../../mockData";
 import AddDoctorDialog from "./AddDoctorDialog";
-
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { List } from "echarts";
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
+interface Doctor {
+  name: string;
+  hname: string;
+  faculty: string;
+  contract: string;
+}
 export default function DoctorList() {
-  const [doctors, setDoctors] = React.useState(mockDoctorsData);
+  const [doctors, setDoctors] = React.useState<any>([]);
+  const { contract, accountAddress } = React.useContext(AppContext);
+
+  const handleDelete = (id: any) => {};
+
+  const getAllDoctor = async () => {
+    const res = await contract.methods.getAllDoctors().call();
+    const { ids, names, hospitals, faculties, contacts, addresses } = res;
+    console.log(res);
+    const data = Array.isArray(ids)
+      ? ids.map((item, index) => {
+          return {
+            address: addresses[index],
+            name: names[index],
+            hname: hospitals[index],
+            faculty: faculties[index],
+            contact: contacts[index],
+          };
+        })
+      : [];
+    setDoctors(data);
+  };
+
+  React.useEffect(() => {
+    getAllDoctor();
+  }, [contract]);
+
+  const handleGrantAccess = async (address: any) => {
+    try {
+      const res = await contract.methods
+        .grantAccess(address)
+        .send({ from: accountAddress, gas: 3000000 });
+      toast.success("Uỷ quyền điều trị thành công", {
+        autoClose: 1000,
+      });
+    } catch (err) {
+      toast.error("Uỷ quyền điều trị thất bại", {
+        autoClose: 1000,
+      });
+    }
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -47,12 +97,11 @@ export default function DoctorList() {
                 <TableHead>
                   <TableRow>
                     {/* <TableCell align="center">#</TableCell> */}
-                    <TableCell></TableCell>
-                    <TableCell>DOCTOR NAME</TableCell>
-                    <TableCell>SPECIALIST</TableCell>
-                    <TableCell>SEX</TableCell>
-                    <TableCell>PHONE NO</TableCell>
-                    <TableCell>EDUCATION</TableCell>
+                    <TableCell>Tên bác sĩ</TableCell>
+                    <TableCell>Bệnh viện</TableCell>
+                    <TableCell>Khoa</TableCell>
+                    <TableCell>Liên hệ</TableCell>
+                    <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -63,19 +112,31 @@ export default function DoctorList() {
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         {/* <TableCell align="center">{doctor.id}</TableCell> */}
-                        <TableCell align="right">
-                          <Avatar
-                            src={"https://i.pravatar.cc/300"}
+
+                        <TableCell>{doctor?.name || ""}</TableCell>
+                        <TableCell>{doctor?.hname || ""}</TableCell>
+                        <TableCell>{doctor?.faculty || ""}</TableCell>
+                        <TableCell>{doctor?.contact || ""}</TableCell>
+                        <TableCell>
+                          <DeleteOutlineOutlinedIcon
                             sx={{
-                              height: "25%",
+                              color: "red",
+                              cursor: "pointer",
+                              marginRight: "5px",
                             }}
+                            onClick={() => handleDelete(doctor.id)}
                           />
+                          {localStorage.getItem("role") === "patient" && (
+                            <HandshakeOutlinedIcon
+                              sx={{
+                                color: "rgb(102, 179, 255)",
+                                cursor: "pointer",
+                                marginRight: "5px",
+                              }}
+                              onClick={() => handleGrantAccess(doctor.address)}
+                            />
+                          )}
                         </TableCell>
-                        <TableCell>{doctor.fullName}</TableCell>
-                        <TableCell>{doctor.specialist}</TableCell>
-                        <TableCell>{doctor.gender}</TableCell>
-                        <TableCell>{doctor.phone}</TableCell>
-                        <TableCell>{doctor.education}</TableCell>
                       </TableRow>
                     ))}
                 </TableBody>

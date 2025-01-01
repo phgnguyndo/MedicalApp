@@ -137,34 +137,37 @@ contract meDossier{
         return (pat.name,pat.phone,pat.gender,pat.dob,pat.bloodgroup);
     }
 
-    function getAllPatients() public view returns (
+function getAllPatients() public view returns (
     uint256[] memory ids,
+    address[] memory addresses,
     string[] memory names,
     string[] memory phones,
     string[] memory genders,
     string[] memory dobs,
     string[] memory bloodgroups
-    ) {
-        uint256 totalPatients = patientList.length;
-        ids = new uint256[](totalPatients);
-        names = new string[](totalPatients);
-        phones = new string[](totalPatients);
-        genders = new string[](totalPatients);
-        dobs = new string[](totalPatients);
-        bloodgroups = new string[](totalPatients);
+) {
+    uint256 totalPatients = patientList.length;
+    ids = new uint256[](totalPatients);
+    addresses = new address[](totalPatients);
+    names = new string[](totalPatients);
+    phones = new string[](totalPatients);
+    genders = new string[](totalPatients);
+    dobs = new string[](totalPatients);
+    bloodgroups = new string[](totalPatients);
 
-        for (uint256 i = 0; i < totalPatients; i++) {
-            address patientAddress = patientList[i];
-            patient memory pat = patients[patientAddress];
+    for (uint256 i = 0; i < totalPatients; i++) {
+        address patientAddress = patientList[i];
+        patient memory pat = patients[patientAddress];
 
-            ids[i] = pat.id;
-            names[i] = pat.name;
-            phones[i] = pat.phone;
-            genders[i] = pat.gender;
-            dobs[i] = pat.dob;
-            bloodgroups[i] = pat.bloodgroup;
-        }
+        ids[i] = pat.id;
+        addresses[i] = patientAddress;
+        names[i] = pat.name;
+        phones[i] = pat.phone;
+        genders[i] = pat.gender;
+        dobs[i] = pat.dob;
+        bloodgroups[i] = pat.bloodgroup;
     }
+}
   //get the length of records of particular address  
      function getrecordlist(address _addr)  public view returns (uint256 ){  
      return (patients[_addr].records.length);
@@ -186,18 +189,31 @@ function getRegisteredDoctorsList(uint256 id) public view returns(uint256 licens
     }
     
 //get patients record 
-    function getPatientRecords(address _addr, uint256 _id) public view 
-    returns(string memory dname, string memory reason ,string memory visitedDate, string memory ipfs){
-        require(isPatient[_addr],"No patient found at the given address");
-        if(Authorized[_addr][msg.sender] || msg.sender == _addr){
-                return( patients[_addr].records[_id].dname,patients[_addr].records[_id].reason,
-                patients[_addr].records[_id].visitedDate,patients[_addr].records[_id].ipfs
-                    );
-        }
-        else 
-        revert("Record cannot be accessed");
-    }
+function getAllPatientRecords(address _addr) 
+    public view 
+    returns(
+        string[] memory dnames, 
+        string[] memory reasons, 
+        string[] memory visitedDates, 
+        string[] memory ipfsHashes
+    ) 
+{
+    require(isPatient[_addr], "No patient found at the given address");
+    // require(Authorized[_addr][msg.sender] || msg.sender == _addr, "Record cannot be accessed");
 
+    uint256 recordCount = patients[_addr].records.length;
+    dnames = new string[](recordCount);
+    reasons = new string[](recordCount);
+    visitedDates = new string[](recordCount);
+    ipfsHashes = new string[](recordCount);
+
+    for (uint256 i = 0; i < recordCount; i++) {
+        dnames[i] = patients[_addr].records[i].dname;
+        reasons[i] = patients[_addr].records[i].reason;
+        visitedDates[i] = patients[_addr].records[i].visitedDate;
+        ipfsHashes[i] = patients[_addr].records[i].ipfs;
+    }
+}
 
 //add doctor 
     function addDoctor(string memory _name,string memory _hname,string memory _faculty,string memory _contact,uint256 license) public {

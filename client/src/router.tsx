@@ -13,6 +13,7 @@ import Account from "./pages/Account/Account";
 import RegisterDoctor from "./pages/Settings/Settings";
 import { mockPatientData } from "./mockData";
 import SignUpPatient from "./pages/Auth/SignupPatient";
+import DetailPatient from "./pages/PatientInfo/DetailPatient";
 
 const USER_TYPES = {
   NORMAL_USER: "Normal User",
@@ -71,7 +72,8 @@ export const router = createBrowserRouter([
     path: "/patient-info/:id",
     element: (
       <AdminElement>
-        <PatientInfo patients={mockPatientData} />
+        {/* <PatientInfo patients={mockPatientData} /> */}
+        <DetailPatient />
       </AdminElement>
     ),
   },
