@@ -9,46 +9,201 @@ import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import PeopleIcon from "@mui/icons-material/People";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import LatestAppointments from "../Dashboard/LatestAppointments";
-import PieChart from "./PieChart";
+import MapsHomeWorkOutlinedIcon from "@mui/icons-material/MapsHomeWorkOutlined";
+import { AppContext } from "../context/AppContext";
+import WcOutlinedIcon from "@mui/icons-material/WcOutlined";
+import CakeOutlinedIcon from "@mui/icons-material/CakeOutlined";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
+import { fileTypeFromBuffer } from "file-type";
+import { toast } from "react-toastify";
+import { serverConfig } from "../../config/serverConfig";
+import ModalViewFile from "../PatientInfo/ModalViewFile";
 
-const infoData = [
-  {
-    icon: <EmailIcon />,
-    title: "Email",
-    value: "test@test.com"
-  },
-  {
-    icon: <PhoneIcon />,
-    title: "Contact no",
-    value: "+11 123456789"
-  },
-  {
-    icon: <PeopleIcon />,
-    title: "Successful Patients",
-    value: "200"
-  },
-  {
-    icon: <MedicalServicesIcon />,
-    title: "Experience",
-    value: "10+ years"
-  }
-];
-
-const profileData = {
-  avatarUrl: "https://i.pravatar.cc/300",
-  name: "Dr. John Doe",
-  specialization: "Cardiologist",
-  email: "john.doe@example.com",
-  contactNo: "+1 123-456-7890",
-  experience: "10 years",
-  patients: "1000+",
-  biography:
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor velit eu orci aliquam ultrices. Etiam quis purus euismod, faucibus leo eu, vestibulum odio.Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor velit eu orci aliquam ultrices. Etiam quis purus euismod, faucibus leo eu, vestibulum odio."
-};
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 
 export default function Profile() {
-  const { avatarUrl, name, specialization, biography } = profileData;
+  const role = localStorage.getItem("role");
+
+  const { contract, accountAddress } = React.useContext(AppContext);
+  const [infoData, setInfoData] = React.useState<any[]>([]);
+  const [patientRecord, setPatientRecord] = React.useState<any>([]);
+  const [isOpenDetailRecord, setIsOpenDetailRecord] = React.useState(false);
+  const [hash, setHashFile] = React.useState();
+
+  const handleCloseDetailReacord = () => {
+    setIsOpenDetailRecord(false);
+  };
+  const [profile, setProfile] = React.useState<any>({
+    avatarUrl: "https://i.pravatar.cc/300",
+  });
+
+  const { avatarUrl, name, specialization, biography } = profile;
+
+  const getDetailInfoDoctor = async () => {
+    try {
+      if (contract) {
+        const res = await contract?.methods
+          .getDoctorByAddress(accountAddress)
+          .call();
+        console.log(res);
+        const data = {
+          contact: res?.contact,
+          faculty: res?.faculty,
+          avatarUrl: "https://i.pravatar.cc/300",
+          specialization: role === "doctor" ? "Bác sĩ" : "Bệnh nhân",
+          hname: res?.hname,
+          name: res?.name,
+          biography:
+            "Chúng tôi cố không bao giờ quên đi rằng y học là vì con người. Y học không phải là vì lợi nhuận. Lợi nhuận theo sau, và nếu chúng tôi nhớ được điều đó, lợi nhuận không bao giờ không xuất hiện. ",
+        };
+        setProfile(data);
+        setInfoData([
+          {
+            icon: <BadgeOutlinedIcon />,
+            title: "Tên bác sĩ",
+            value: res?.name,
+          },
+          {
+            icon: <PhoneIcon />,
+            title: "Số tiện thoại",
+            value: res?.contact,
+          },
+          {
+            icon: <MapsHomeWorkOutlinedIcon />,
+            title: "Bệnh viện",
+            value: res?.hname,
+          },
+          {
+            icon: <MedicalServicesIcon />,
+            title: "Khoa",
+            value: res?.faculty,
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getAllPatientRecord = async () => {
+    try {
+      if (contract) {
+        const res = await contract?.methods
+          .getAllPatientRecords(accountAddress)
+          .call();
+        const { ids, dnames, ipfsHashes, reasons, visitedDates } = res;
+        const data = Array.isArray(dnames)
+          ? dnames.map((item, index) => {
+              return {
+                dname: dnames[index],
+                reason: reasons[index],
+                visitedDate: visitedDates[index],
+                hash: ipfsHashes[index],
+              };
+            })
+          : [];
+
+        setPatientRecord(data);
+        console.log(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getDetailPatient = async () => {
+    try {
+      if (contract) {
+        const res = await contract?.methods
+          .getPatientDetails(accountAddress)
+          .call();
+        //get reaccord patient
+        getAllPatientRecord();
+        const data = {
+          avatarUrl: "https://i.pravatar.cc/300",
+          specialization: role === "doctor" ? "Bác sĩ" : "Bệnh nhân",
+          name: res?._name,
+          // biography:
+          //   "Chúng tôi cố không bao giờ quên đi rằng y học là vì con người. Y học không phải là vì lợi nhuận. Lợi nhuận theo sau, và nếu chúng tôi nhớ được điều đó, lợi nhuận không bao giờ không xuất hiện. ",
+        };
+        setProfile(data);
+        setInfoData([
+          {
+            icon: <BadgeOutlinedIcon />,
+            title: "Tên bệnh nhân",
+            value: res?._name,
+          },
+          {
+            icon: <PhoneIcon />,
+            title: "Số tiện thoại",
+            value: res?._contact,
+          },
+          {
+            icon: <WcOutlinedIcon />,
+            title: "Giới tính",
+            value: res?._gender,
+          },
+          {
+            icon: <CakeOutlinedIcon />,
+            title: "Ngày sinh",
+            value: res?._dob,
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDownloadfile = async (hash: any) => {
+    try {
+      const response = await fetch(
+        `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+      );
+      const arrayBuffer = await response.arrayBuffer();
+
+      console.log(arrayBuffer);
+
+      //check typ file
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const type: any = await fileTypeFromBuffer(uint8Array);
+      let name = "";
+      if (type?.ext === "pdf") {
+        name = "benhan.pdf";
+      } else {
+        name = "benhan.docx";
+      }
+      const blob = new Blob([arrayBuffer]);
+      console.log(blob);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      console.log(url);
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Tải file thành công", { autoClose: 1000 });
+    } catch (error) {
+      console.log(error);
+      toast.error("Tải file thất bại", { autoClose: 1000 });
+    }
+  };
+
+  React.useEffect(() => {
+    getDetailInfoDoctor();
+    getDetailPatient();
+  }, [contract]);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -62,14 +217,19 @@ export default function Profile() {
               : theme.palette.grey[900],
           flexGrow: 1,
           height: "100vh",
-          overflow: "auto"
+          overflow: "auto",
         }}
       >
         <Toolbar />
+        <ModalViewFile
+          isOpen={isOpenDetailRecord}
+          handleClose={handleCloseDetailReacord}
+          hash={hash}
+        />
 
         <Container sx={{ mt: 4, mb: 4 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4} lg={4}>
+            <Grid item xs={4}>
               <Paper
                 sx={{
                   p: 2,
@@ -77,7 +237,7 @@ export default function Profile() {
                   flexDirection: "column",
                   height: 445,
                   justifyContent: "center",
-                  alignItems: "center"
+                  alignItems: "center",
                 }}
               >
                 <Stack spacing={2} direction="column" alignItems="center">
@@ -86,7 +246,7 @@ export default function Profile() {
                       src={avatarUrl}
                       sx={{
                         height: "100%",
-                        width: "100%"
+                        width: "100%",
                       }}
                     />
                   </Stack>
@@ -98,26 +258,12 @@ export default function Profile() {
               </Paper>
             </Grid>
 
-            <Grid item xs={12} md={8} lg={8}>
+            <Grid item xs={8}>
               <Box
                 sx={{
-                  flexGrow: 0
+                  flexGrow: 0,
                 }}
               >
-                <Grid item xs={12}>
-                  <Paper
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      mb: 1
-                    }}
-                  >
-                    <Typography variant="body1" gutterBottom sx={{ m: 1.5 }}>
-                      {biography}
-                    </Typography>
-                  </Paper>
-                </Grid>
-
                 <Grid container spacing={2}>
                   {infoData.map((item, index) => (
                     <Grid key={index} item xs={12} md={6} lg={6}>
@@ -125,12 +271,12 @@ export default function Profile() {
                         sx={{
                           display: "flex",
                           flexDirection: "column",
-                          height: 150
+                          height: 150,
                         }}
                       >
                         <Box
                           sx={{
-                            flexGrow: 1
+                            flexGrow: 1,
                           }}
                         >
                           <Stack
@@ -174,33 +320,71 @@ export default function Profile() {
                 </Grid>
               </Box>
             </Grid>
-
-            <Grid item xs={12} md={8} lg={8}>
-              <LatestAppointments />
-            </Grid>
-
-            <Grid item xs={12} md={4} lg={4}>
-              <Typography
-                component="h2"
-                align="left"
-                variant="h6"
-                gutterBottom
-                color="primary"
-              >
-                Chart
-              </Typography>
-              <Paper
-                sx={{
-                  p: 2,
-                  display: "flex",
-                  flexDirection: "column",
-                  height: 370
-                }}
-              >
-                <PieChart />
-              </Paper>
-            </Grid>
           </Grid>
+
+          {role === "patient" ? (
+            <Grid mt={4} ml={0.8} container spacing={3}>
+              <h3>Hồ sơ bệnh án</h3>
+              <TableContainer component={Paper}>
+                <Table aria-label="patient table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tên bác sĩ</TableCell>
+                      <TableCell>Lý do bệnh án</TableCell>
+                      <TableCell>Thời gian khám</TableCell>
+                      <TableCell>Hành động</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {patientRecord.length > 0 &&
+                      patientRecord.map((doctor: any, index: any) => (
+                        <TableRow
+                          key={index}
+                          style={{
+                            textDecoration: "none",
+                            color: "inherit",
+                          }}
+                        >
+                          {/* <TableCell align="center">{doctor.id}</TableCell> */}
+
+                          <TableCell>{doctor?.dname || ""}</TableCell>
+                          <TableCell>{doctor?.reason || ""}</TableCell>
+                          <TableCell>{doctor?.visitedDate || ""}</TableCell>
+                          <TableCell>
+                            {localStorage.getItem("role") === "patient" && (
+                              <DownloadOutlinedIcon
+                                sx={{
+                                  color: "rgb(102, 179, 255)",
+                                  cursor: "pointer",
+                                  marginRight: "5px",
+                                }}
+                                onClick={() => handleDownloadfile(doctor.hash)}
+                              />
+                            )}
+
+                            {localStorage.getItem("role") === "patient" && (
+                              <RemoveRedEyeOutlinedIcon
+                                sx={{
+                                  color: "rgb(102, 179, 255)",
+                                  cursor: "pointer",
+                                  marginRight: "5px",
+                                }}
+                                onClick={() => {
+                                  setIsOpenDetailRecord(true);
+                                  setHashFile(doctor.hash);
+                                }}
+                              />
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Grid>
+          ) : (
+            ""
+          )}
         </Container>
       </Box>
     </Box>
