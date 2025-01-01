@@ -32,21 +32,23 @@ export default function DoctorList() {
   const handleDelete = (id: any) => {};
 
   const getAllDoctor = async () => {
-    const res = await contract.methods.getAllDoctors().call();
-    const { ids, names, hospitals, faculties, contacts, addresses } = res;
-    console.log(res);
-    const data = Array.isArray(ids)
-      ? ids.map((item, index) => {
-          return {
-            address: addresses[index],
-            name: names[index],
-            hname: hospitals[index],
-            faculty: faculties[index],
-            contact: contacts[index],
-          };
-        })
-      : [];
-    setDoctors(data);
+    if (contract) {
+      const res = await contract?.methods.getAllDoctors().call();
+      const { ids, names, hospitals, faculties, contacts, addresses } = res;
+      console.log(res);
+      const data = Array.isArray(ids)
+        ? ids.map((item, index) => {
+            return {
+              address: addresses[index],
+              name: names[index],
+              hname: hospitals[index],
+              faculty: faculties[index],
+              contact: contacts[index],
+            };
+          })
+        : [];
+      setDoctors(data);
+    }
   };
 
   React.useEffect(() => {
@@ -55,12 +57,14 @@ export default function DoctorList() {
 
   const handleGrantAccess = async (address: any) => {
     try {
-      const res = await contract.methods
-        .grantAccess(address)
-        .send({ from: accountAddress, gas: 3000000 });
-      toast.success("Uỷ quyền điều trị thành công", {
-        autoClose: 1000,
-      });
+      if (contract) {
+        const res = await contract?.methods
+          .grantAccess(address)
+          .send({ from: accountAddress, gas: 3000000 });
+        toast.success("Uỷ quyền điều trị thành công", {
+          autoClose: 1000,
+        });
+      }
     } catch (err) {
       toast.error("Uỷ quyền điều trị thất bại", {
         autoClose: 1000,

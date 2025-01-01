@@ -66,18 +66,20 @@ export default function AddPatientDialog({
   };
 
   const onSubmit = async (data: FormValues) => {
-    const res = await contract.methods
-      .addRecord(
-        data.name,
-        data.age,
-        data.gender,
-        data.bloodType,
-        data.allergies,
-        data.diagnosis,
-        data.treatment,
-        ""
-      )
-      .send({ from: accountAddress, gas: 3000000 });
+    if (contract) {
+      const res = await contract?.methods
+        .addRecord(
+          data.name,
+          data.age,
+          data.gender,
+          data.bloodType,
+          data.allergies,
+          data.diagnosis,
+          data.treatment,
+          ""
+        )
+        .send({ from: accountAddress, gas: 3000000 });
+    }
     // setPatients((prevState: any) => [...prevState, data]);
     handleClose();
   };

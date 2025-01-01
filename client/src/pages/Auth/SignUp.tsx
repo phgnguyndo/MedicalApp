@@ -38,21 +38,23 @@ export default function SignUp({ type }: any) {
   const onSubmit = async (data: FormValues) => {
     if (type === "doctor") {
       try {
-        const res = await contract.methods
-          .addDoctor(
-            data.name,
-            data.hospital,
-            data.faculty,
-            data.contact,
-            data.license
-          )
-          .send({ from: accountAddress, gas: 3000000 });
-        localStorage.setItem("role", "doctor");
-        navigate(`/dashboard`);
+        if (contract) {
+          const res = await contract?.methods
+            .addDoctor(
+              data.name,
+              data.hospital,
+              data.faculty,
+              data.contact,
+              data.license
+            )
+            .send({ from: accountAddress, gas: 3000000 });
+          localStorage.setItem("role", "doctor");
+          navigate(`/dashboard`);
 
-        toast.success("Đăng ký tài khoản bác sĩ thành công", {
-          autoClose: 1000,
-        });
+          toast.success("Đăng ký tài khoản bác sĩ thành công", {
+            autoClose: 1000,
+          });
+        }
       } catch (error) {
         console.log(error);
         toast.error("Đăng ký tài khoản bác sĩ  thất bại", { autoClose: 1000 });
