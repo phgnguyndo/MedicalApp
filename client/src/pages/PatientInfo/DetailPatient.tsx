@@ -4,7 +4,15 @@ import IconButton from "@mui/material/IconButton";
 import Appbar from "../../components/Appbar";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
-import { Avatar, Typography, Grid, Box, Stack } from "@mui/material";
+import {
+  Avatar,
+  Typography,
+  Grid,
+  Box,
+  Stack,
+  Fade,
+  Popper,
+} from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import PeopleIcon from "@mui/icons-material/People";
@@ -33,6 +41,7 @@ import { DeleteForeverOutlined } from "@mui/icons-material";
 
 export default function DetailPatient() {
   const { id } = useParams<{ id: string }>();
+
   const { contract, accountAddress } = React.useContext(AppContext);
   const [infoPatient, setInfoPatient] = React.useState<any>();
   const [patientRecord, setPatientRecord] = React.useState<any>([]);
@@ -89,7 +98,7 @@ export default function DetailPatient() {
   React.useEffect(() => {
     getAllPatientRecord();
     getDetailPatient();
-  }, [id]);
+  }, [id, contract]);
 
   const handleDownloadfile = async (hash: any) => {
     try {
