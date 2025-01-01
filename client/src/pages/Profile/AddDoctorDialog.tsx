@@ -30,6 +30,7 @@ const Transition = React.forwardRef(function Transition(
 export default function AddDoctorDialog({ doctors, setDoctors }: any) {
   const [open, setOpen] = React.useState(false);
   const { contract, accountAddress } = React.useContext(AppContext);
+  const role = localStorage.getItem("role");
 
   const {
     register,
@@ -84,13 +85,17 @@ export default function AddDoctorDialog({ doctors, setDoctors }: any) {
         spacing={2}
       >
         <SearchInput />
-        <Button
-          variant="outlined"
-          startIcon={<AddIcon />}
-          onClick={handleClickOpen}
-        >
-          Đăng ký bác sĩ
-        </Button>
+        {role === "owner" ? (
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={handleClickOpen}
+          >
+            Đăng ký bác sĩ
+          </Button>
+        ) : (
+          ""
+        )}
         {/* <Button onClick={() => handleGetRole()}>Role</Button> */}
       </Stack>
 

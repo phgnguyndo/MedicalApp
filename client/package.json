@@ -5,6 +5,7 @@
   "keywords": [],
   "main": "src/index.tsx",
   "dependencies": {
+    "@cyntler/react-doc-viewer": "^1.17.0",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@fullcalendar/core": "6.1.4",
@@ -27,6 +28,7 @@
     "loader-utils": "3.2.1",
     "moment": "2.29.4",
     "react": "18.2.0",
+    "react-doc-viewer": "^0.1.14",
     "react-dom": "18.2.0",
     "react-hook-form": "7.43.9",
     "react-router-dom": "6.10.0",

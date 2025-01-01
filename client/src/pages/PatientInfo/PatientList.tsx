@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useContext } from "react";
 import {
   Table,
@@ -26,7 +26,7 @@ import { AppContext } from "../context/AppContext";
 
 function PatientList({ data }: any) {
   const { contract, accountAddress } = useContext(AppContext);
-  const [patients, setPatients] = React.useState(mockPatientData);
+  const [patients, setPatients] = React.useState<any>([]);
   const navigate = useNavigate();
   const [searchedPatients, setSearchedPatients] = React.useState([]);
   const [page, setPage] = React.useState(0);
@@ -70,6 +70,30 @@ function PatientList({ data }: any) {
     await contract.methods.deleteRecord(id).send({ from: accountAddress });
   };
 
+  const getAllPatient = async () => {
+    const res = await contract.methods.getAllPatients().call();
+    const { ids, names, phones, genders, dobs, bloodgroups, addresses } = res;
+    console.log(addresses);
+    const data = Array.isArray(ids)
+      ? ids.map((item, index) => {
+          return {
+            id: item,
+            name: names[index],
+            phone: phones[index],
+            gender: genders[index],
+            dob: dobs[index],
+            bloodgroup: bloodgroups[index],
+            address: addresses[index],
+          };
+        })
+      : [];
+    setPatients(data);
+  };
+
+  useEffect(() => {
+    getAllPatient();
+  }, [contract]);
+
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar appBarTitle="Danh sách bệnh nhân" />
@@ -88,11 +112,11 @@ function PatientList({ data }: any) {
         <Toolbar />
 
         <Container sx={{ mt: 4, mb: 4 }}>
-          <AddPatientDialog
+          {/* <AddPatientDialog
             patients={patients}
             setPatients={setPatients}
             handleChange={handleChange}
-          />
+          /> */}
           <Grid
             container
             spacing={2}
@@ -104,12 +128,10 @@ function PatientList({ data }: any) {
                   <TableRow>
                     <TableCell align="center">#</TableCell>
                     <TableCell>Tên bệnh nhân</TableCell>
-                    <TableCell>Tuổi</TableCell>
+                    <TableCell>Số điện thoại</TableCell>
                     <TableCell>Giới tính</TableCell>
+                    <TableCell>Ngày sinh</TableCell>
                     <TableCell>Nhóm máu</TableCell>
-                    <TableCell>Dị ứng</TableCell>
-                    <TableCell>Chuẩn đoán</TableCell>
-                    <TableCell>Phương pháp điều trị</TableCell>
                     <TableCell>Hành động</TableCell>
                   </TableRow>
                 </TableHead>
@@ -129,12 +151,10 @@ function PatientList({ data }: any) {
                     >
                       <TableCell align="center">{patient.id}</TableCell>
                       <TableCell>{patient.name}</TableCell>
-                      <TableCell>{patient.age}</TableCell>
+                      <TableCell>{patient.phone}</TableCell>
                       <TableCell>{patient.gender}</TableCell>
-                      <TableCell>{patient.bloodType}</TableCell>
-                      <TableCell>{patient.allergies}</TableCell>
-                      <TableCell>{patient.diagnosis}</TableCell>
-                      <TableCell>{patient.treatment}</TableCell>
+                      <TableCell>{patient.dob}</TableCell>
+                      <TableCell>{patient.bloodgroup}</TableCell>
                       <TableCell>
                         <DeleteOutlineOutlinedIcon
                           sx={{
@@ -149,7 +169,7 @@ function PatientList({ data }: any) {
                             color: "rgb(102, 179, 255)",
                             cursor: "pointer",
                           }}
-                          onClick={() => handleEdit(patient.id)}
+                          onClick={() => handleEdit(patient.address)}
                         />
                       </TableCell>
                     </TableRow>

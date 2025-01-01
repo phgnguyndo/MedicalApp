@@ -23,6 +23,7 @@ import avartar from "../../assets/avatar-blank.png";
 import React, { useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import { useForm } from "react-hook-form";
+import ModalViewFile from "./ModalViewFile";
 
 type FormValues = {
   name: string;
@@ -40,6 +41,11 @@ const PatientInfo = ({ patients }: any) => {
   const [open, setOpen] = React.useState(false);
   const [file, setFile] = React.useState(null);
   const { contract, accountAddress } = React.useContext(AppContext);
+
+  const [isOpenDetailRecord, setIsOpenDetailRecord] = React.useState(false);
+  const handleCloseDetailReacord = () => {
+    setIsOpenDetailRecord(false);
+  };
 
   const viewRecord = async () => {
     if (id && accountAddress) {
@@ -136,7 +142,11 @@ const PatientInfo = ({ patients }: any) => {
   }, [reset]);
   return (
     <Box sx={{ display: "flex" }}>
-      <Appbar appBarTitle="Thông tin chi tiết bệnh án" />
+      <Appbar appBarTitle="Thông tin chi tiết bệnh nhân" />
+      <ModalViewFile
+        isOpen={isOpenDetailRecord}
+        handleClose={handleCloseDetailReacord}
+      />
       <Box
         component="main"
         sx={{
