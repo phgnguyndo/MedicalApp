@@ -29,6 +29,7 @@ import ModalViewFile from "./ModalViewFile";
 import { serverConfig } from "../../config/serverConfig";
 import { toast } from "react-toastify";
 import { fileTypeFromBuffer } from "file-type";
+import { DeleteForeverOutlined } from "@mui/icons-material";
 
 export default function DetailPatient() {
   const { id } = useParams<{ id: string }>();
@@ -125,6 +126,21 @@ export default function DetailPatient() {
       toast.error("Tải file thất bại", { autoClose: 1000 });
     }
   };
+
+  const handleDeleteRecord = async (hash: any) => {
+    console.log(hash);
+    console.log(id);
+    try {
+      const res = await contract?.methods
+        .deleteRecord(id, hash)
+        .send({ from: accountAddress, gas: 3000000 });
+      getAllPatientRecord();
+      toast.success("Xoá hồ sơ bệnh án thành công", { autoClose: 1000 });
+    } catch (err) {
+      toast.error("Xoá hồ sơ bệnh án thất bại", { autoClose: 1000 });
+    }
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar
@@ -309,6 +325,20 @@ export default function DetailPatient() {
                                           setIsOpenDetailRecord(true);
                                           setHashFile(doctor.hash);
                                         }}
+                                      />
+                                    )}
+
+                                    {localStorage.getItem("role") ===
+                                      "doctor" && (
+                                      <DeleteForeverOutlined
+                                        sx={{
+                                          color: "red",
+                                          cursor: "pointer",
+                                          marginRight: "5px",
+                                        }}
+                                        onClick={() =>
+                                          handleDeleteRecord(doctor.hash)
+                                        }
                                       />
                                     )}
                                   </TableCell>
