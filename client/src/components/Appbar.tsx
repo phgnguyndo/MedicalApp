@@ -17,7 +17,7 @@ import Menu from "@mui/material/Menu";
 import { Link } from "react-router-dom";
 import { settings } from "../constant";
 import { AppBar, Drawer } from "../styles";
-
+import logo from "../assets/hospital.svg";
 export default function Appbar(props: { appBarTitle: string }) {
   const [open, setOpen] = React.useState(true);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
@@ -39,7 +39,7 @@ export default function Appbar(props: { appBarTitle: string }) {
       <AppBar position="absolute" open={open}>
         <Toolbar
           sx={{
-            pr: "24px" // keep right padding when drawer closed
+            pr: "24px", // keep right padding when drawer closed
           }}
         >
           <IconButton
@@ -49,7 +49,7 @@ export default function Appbar(props: { appBarTitle: string }) {
             onClick={toggleDrawer}
             sx={{
               marginRight: "36px",
-              ...(open && { display: "none" })
+              ...(open && { display: "none" }),
             }}
           >
             <MenuIcon />
@@ -92,12 +92,12 @@ export default function Appbar(props: { appBarTitle: string }) {
               anchorEl={anchorElUser}
               anchorOrigin={{
                 vertical: "top",
-                horizontal: "right"
+                horizontal: "right",
               }}
               keepMounted
               transformOrigin={{
                 vertical: "top",
-                horizontal: "right"
+                horizontal: "right",
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
@@ -122,11 +122,11 @@ export default function Appbar(props: { appBarTitle: string }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            px: [1]
+            px: [1],
           }}
         >
           <Typography variant="h4" align="center">
-            <img src="hospital.svg" height="40px" />
+            <img src={logo} height="40px" />
             <span style={{ color: "#005B93" }}>EALTHY</span>
           </Typography>
           <IconButton onClick={toggleDrawer}>

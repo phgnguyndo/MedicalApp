@@ -4,7 +4,15 @@ import IconButton from "@mui/material/IconButton";
 import Appbar from "../../components/Appbar";
 import Toolbar from "@mui/material/Toolbar";
 import Container from "@mui/material/Container";
-import { Avatar, Typography, Grid, Box, Stack } from "@mui/material";
+import {
+  Avatar,
+  Typography,
+  Grid,
+  Box,
+  Stack,
+  Fade,
+  Popper,
+} from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import PeopleIcon from "@mui/icons-material/People";
@@ -29,9 +37,24 @@ import ModalViewFile from "./ModalViewFile";
 import { serverConfig } from "../../config/serverConfig";
 import { toast } from "react-toastify";
 import { fileTypeFromBuffer } from "file-type";
+import { DeleteForeverOutlined } from "@mui/icons-material";
+import axios from "axios";
+import { pinataConfig } from "../../config/pinataConfig";
+
+export const downLoadFileFromBlobLink = (response: any) => {
+  const href = URL.createObjectURL(response);
+  const link = document.createElement('a');
+  link.href = href;
+  link.setAttribute('download', `Doi-soat-chi-tiet.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(href)
+}
 
 export default function DetailPatient() {
   const { id } = useParams<{ id: string }>();
+
   const { contract, accountAddress } = React.useContext(AppContext);
   const [infoPatient, setInfoPatient] = React.useState<any>();
   const [patientRecord, setPatientRecord] = React.useState<any>([]);
@@ -88,12 +111,15 @@ export default function DetailPatient() {
   React.useEffect(() => {
     getAllPatientRecord();
     getDetailPatient();
-  }, [id]);
+  }, [id, contract]);
 
   const handleDownloadfile = async (hash: any) => {
     try {
-      const response = await fetch(
-        `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+    //   const response = await fetch(
+    //     `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+    //   );
+        const response = await fetch(
+       `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
       );
       const arrayBuffer = await response.arrayBuffer();
 
@@ -125,6 +151,41 @@ export default function DetailPatient() {
       toast.error("Tải file thất bại", { autoClose: 1000 });
     }
   };
+
+  // const handleDownloadfile = async (hash: any) => {
+  //   // const response = await axios.get( `${pinataConfig.pinata_server}/ipfs/QmeQvjsbch4jmfnKJqW6KQECaBFFeLKkCfZM4gHgZ7qjPX?pinataGatewayToken=${pinataConfig.gateway_token}`)
+  //   const response = await fetch(
+  //      `${pinataConfig.pinata_server}/ipfs/QmeQvjsbch4jmfnKJqW6KQECaBFFeLKkCfZM4gHgZ7qjPX?pinataGatewayToken=${pinataConfig.gateway_token}`
+  //     );
+  //   const arrayBuffer = await response.arrayBuffer();
+  //   console.log(arrayBuffer)
+  //   // downLoadFileFromBlobLink(response)
+
+  // }
+  const handleDeleteRecord = async (hash: any) => {
+    console.log(hash);
+    console.log(id);
+    try {
+      const res = await contract?.methods
+        .deleteRecord(id, hash)
+        .send({ from: accountAddress, gas: 3000000 });
+      // const response = await fetch(
+      //     `${pinataConfig.pinata_server}/pinning/unpin/QmZwCUcz3X3TtyowEdcTZyzi4ZMkKVoUAC6en4TNzMur1w`,
+      //     {
+      //       method: "DELETE",   
+      //       headers: {
+      //         Authorization: `Bearer ${pinataConfig.jwt}`,
+      //       },  
+      //     }
+      //   );
+        // console.log(response)
+      // getAllPatientRecord();
+      toast.success("Xoá hồ sơ bệnh án thành công", { autoClose: 1000 });
+    } catch (err) {
+      toast.error("Xoá hồ sơ bệnh án thất bại", { autoClose: 1000 });
+    }
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar
@@ -309,6 +370,20 @@ export default function DetailPatient() {
                                           setIsOpenDetailRecord(true);
                                           setHashFile(doctor.hash);
                                         }}
+                                      />
+                                    )}
+
+                                    {localStorage.getItem("role") ===
+                                      "doctor" && (
+                                      <DeleteForeverOutlined
+                                        sx={{
+                                          color: "red",
+                                          cursor: "pointer",
+                                          marginRight: "5px",
+                                        }}
+                                        onClick={() =>
+                                          handleDeleteRecord(doctor.hash)
+                                        }
                                       />
                                     )}
                                   </TableCell>

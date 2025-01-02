@@ -52,15 +52,15 @@ contract meDossier is PatientContract{
     
     }
 
-    function isAuthorized(address pat,address client ) public view returns (bool success){
-        return Authorized[pat][client];
-    }
+    // function isAuthorized(address pat,address client ) public view returns (bool success){
+    //     return Authorized[pat][client];
+    // }
     
     //Check whether the doctor is registered or not
-     function isRegistered(address addr) public view returns (bool success){
-        doctor memory doc = doctors[addr];
-        return Registered[doc.name][doc.licenseno];
-    }
+    //  function isRegistered(address addr) public view returns (bool success){
+    //     doctor memory doc = doctors[addr];
+    //     return Registered[doc.name][doc.licenseno];
+    // }
     
 
 //Add terecords of the patient
@@ -72,61 +72,68 @@ contract meDossier is PatientContract{
         }
         else 
         revert("Record cannot be added ");
-       
-       
-        // require(Authorized[addr][msg.sender],"You do not have permission to add records!");
-        // require(isPatient[addr],"User Not registered");
-        // patients[addr].records.push(Records(_dname,_reason,_visitedDate,_ipfs));
+    }
+
+    function deleteRecord(address patientAddr, string memory _ipfs) public {
+        require(isPatient[patientAddr], "No patient found at the given address");
+        require(Authorized[patientAddr][msg.sender], "You are not authorized to delete records for this patient");
+
+        // Lấy danh sách bản ghi của bệnh nhân
+        Records[] storage records = patients[patientAddr].records;
+        uint256 recordIndex = records.length;
+
+        // Tìm bản ghi có IPFS khớp
+        for (uint256 i = 0; i < records.length; i++) {
+            if (keccak256(abi.encodePacked(records[i].ipfs)) == keccak256(abi.encodePacked(_ipfs))) {
+                recordIndex = i;
+                break;
+            }
+        }
+
+        require(recordIndex < records.length, "Record with the given IPFS not found");
+
+        // Xóa bản ghi bằng cách di chuyển phần tử cuối cùng vào vị trí bị xóa
+        if (recordIndex < records.length - 1) {
+            records[recordIndex] = records[records.length - 1];
+        }
+
+        // Giảm chiều dài danh sách
+        records.pop();
     }
     
 
-  //get the length of records of particular address  
-     function getrecordlist(address _addr)  public view returns (uint256 ){  
-     return (patients[_addr].records.length);
-     }
-
-//get the length of doctor's added in blockchain
-// function getdoctorlist() public view returns(uint256){
-//         return doctorList.length;
-//     }
-   
-   //get the length of registered doctor 
-// function getRegisteredDoctorslength() public view returns(uint256){
-//         return registeredDoctorList.length;
-//     }
-
-// //
-// function getRegisteredDoctorsList(uint256 id) public view returns(uint256 license){
-//         return registeredDoctorList[id];
-//     }
-    
-
 //add doctor 
-    function addDoctor(string memory _name,string memory _hname,string memory _faculty,string memory _contact,uint256 license) public {
-        require(!isDoctor[msg.sender],"Already Registered");
-        require(msg.sender != owner,"Contract owner cannot register as doctor");
-        require(bytes(_name).length>0);
-        require(bytes(_hname).length>0);
-        require(bytes(_faculty).length>0);
-        require(bytes(_contact).length>0);
-        require(license>0);  
+    function addDoctor(
+        string memory _name,
+        string memory _hname,
+        string memory _faculty,
+        string memory _contact,
+        uint256 license
+    ) public {
+        require(!isDoctor[msg.sender], "Already Registered");
+        require(msg.sender != owner, "Contract owner cannot register as doctor");
+        // require(msg.sender != patient, "Patient cannot register as doctor");
+        require(bytes(_name).length > 0, "Doctor name is required");
+        require(bytes(_hname).length > 0, "Hospital name is required");
+        require(bytes(_faculty).length > 0, "Faculty is required");
+        require(bytes(_contact).length > 0, "Contact is required");
+        // require(license > 0, "License number must be greater than 0");
+        require(Registered[_name][license], "Doctor license is not registered");
+
         address _addr = msg.sender;
         doctorList.push(_addr);
 
         dindex = dindex + 1;
-        isDoctor[_addr]=true;
+        isDoctor[_addr] = true;
         doctors[_addr].name = _name;
-        doctors[_addr].contact =_contact;
+        doctors[_addr].contact = _contact;
         doctors[_addr].hname = _hname;
-        doctors[_addr].faculty =_faculty; 
+        doctors[_addr].faculty = _faculty;
         doctors[_addr].addr = _addr;
         doctors[_addr].licenseno = license;
-        doctors[_addr].isApproved = false;
-        
-        if (Registered[_name][license] == true){
-            doctors[_addr].isApproved = true;
-        }
+        doctors[_addr].isApproved = true; // Set to true since license is registered
     }
+
 
 
     function getAllDoctors() public view returns (
@@ -162,35 +169,6 @@ contract meDossier is PatientContract{
             licenses[i] = doc.licenseno;
         }
     }
-//get doctor's details  for verification
-    // function getDoctorbyLicense(uint256 license) public view returns(uint256 id, string memory name,string memory hospital, string memory _faculty,address addr,bool isApproved,uint256 licenseno){
-       
-    //      uint256 i=0;
-    //     for(i = 0;i<doctorList.length;i++){
-    //     if(doctors[doctorList[i]].licenseno==license){
-    //         break;
-    //     }
-    // }    
-    // doctor memory doc = doctors[doctorList[i]];
-    // require(isDoctor[doc.addr]==true,"Doctor hasn't signed up in meDossier");
-    //      require(doc.isApproved==true,"Doctor is not approved");
-        
-        
-    //     return (doc.id,doc.name,doc.hname,doc.faculty,doc.addr,doc.isApproved,doc.licenseno) ;
-       
-    // }
-    
-//  function getDoctorbyName(string memory _name) public view returns(uint256 id,string memory name , string memory contact ,string memory hname ,string memory faculty ,address addr , bool isApproved,uint256 licenseno)  {
-//         uint256 i=0;
-//         for(i = 0;i<doctorList.length;i++){
-//         if(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name))){
-//             break;
-//         }
-//     }    
-//         require(keccak256(bytes(doctors[doctorList[i]].name)) == keccak256(bytes(_name)),"Doctor doesn't exists with the given name");
-//         doctor memory doc = doctors[doctorList[i]];
-//         return (doc.id,doc.name,doc.contact,doc.hname,doc.faculty,doc.addr, doc.isApproved,doc.licenseno);
-//     }
     
 
  function getDoctorByAddress(address _address) public view returns(uint256 id,string memory name , string memory contact ,string memory hname ,string memory faculty ,address addr , bool isApproved,uint256 licenseno) {

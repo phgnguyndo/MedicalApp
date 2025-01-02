@@ -25,6 +25,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import { pinataConfig } from "../../config/pinataConfig";
+import axios from 'axios'
 import { serverConfig } from "../../config/serverConfig";
 type FormValues = {
   _dname: string;
@@ -93,20 +95,34 @@ export default function AddPatientRecordDialog({
           autoClose: false,
         });
       }
-      formData.append("benhan", files[0]);
-      const response = await fetch(`${serverConfig.server_ipfs}/api/v0/add`, {
-        method: "POST",
-        body: formData, // Send form data
-      });
-      const data_ipfs = await response.json();
-      console.log(data_ipfs);
-
+      formData.append("file", files[0]);
+      // const response = await fetch(`${serverConfig.server_ipfs}/api/v0/add`, {
+      //   method: "POST",
+      //   body: formData, // Send form data
+      // });
+      // const data_ipfs = await response.json();
+      // console.log(data_ipfs);
+      console.log(process.env.REACT_APP_API_SECRET)
+      const response = await axios.post(
+        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        formData,
+        {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'pinata_api_key': pinataConfig.api_key,
+                'pinata_secret_api_key':pinataConfig.api_secret,
+                // "Authorization": process.env.JWT
+            },
+        }
+    );
+    // console.log(response)
       if (response.status === 200) {
         const formattedDate = dayjs(data._visitedDate).format("DD-MM-YYYY");
         const dataSubmit = {
           ...data,
           _dname: docketName,
-          _ipfs: data_ipfs["Hash"],
+          // _ipfs: data_ipfs["Hash"],
+          _ipfs: response.data["IpfsHash"],
           addr: patientInfo?.address,
           _visitedDate: formattedDate,
         };

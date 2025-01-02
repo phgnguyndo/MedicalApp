@@ -23,6 +23,8 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
+import { pinataConfig } from "../../config/pinataConfig";
 
 function PatientList({ data }: any) {
   const { contract, accountAddress } = useContext(AppContext);
@@ -67,7 +69,15 @@ function PatientList({ data }: any) {
   const handleDelete = async (id: any) => {
     // const updatedPatients = patients.filter((patient: any) => patient.id!== id);
     // setPatients(updatedPatients);
-    await contract?.methods.deleteRecord(id).send({ from: accountAddress });
+   
+    try {
+      await contract?.methods.deleteRecord(id).send({ from: accountAddress });
+
+        toast.success("Xoá bệnh án thành công")
+    } catch (err) {
+      console.log(err)
+      toast.error("Xoá bệnh án thất bại")
+    }
   };
 
   const getAllPatient = async () => {
