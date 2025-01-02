@@ -171,29 +171,23 @@ export default function DetailPatient() {
   // };
   const handleDownloadfile = async (hash: any) => {
     try {
-      // Fetch file từ IPFS
+      // const response = await fetch(
+      //   `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
+      // );
+      // if (!response.ok) {
+      //   throw new Error("Failed to fetch file from IPFS");
+      // }
       const response = await fetch(
-        `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
+        `${serverConfig.server_download_ipfs}/ipfs/${hash}`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch file from IPFS");
-      }
-  
-      // Lấy nội dung mã hóa dưới dạng chuỗi
       const encryptedData = await response.text();
       console.log("Encrypted data (first 100 chars):", encryptedData.slice(0, 100));
-  
-      // Lấy khóa giải mã từ .env
-      const cryptoKey = process.env.REACT_APP_CRYPTO_KEY;
+      const cryptoKey = pinataConfig.crypto_key;
       if (!cryptoKey) {
         throw new Error("Missing CRYPTO_KEY in environment variables");
       }
-  
-      // Giải mã file
       const decryptedArrayBuffer = decryptFile(encryptedData, cryptoKey);
       console.log("Decrypted ArrayBuffer size:", decryptedArrayBuffer.length);
-  
-      // Kiểm tra loại file
       const type = await fileTypeFromBuffer(decryptedArrayBuffer);
       console.log("File type detected:", type);
   
@@ -204,12 +198,10 @@ export default function DetailPatient() {
         name = "benhan.docx";
       }
   
-      // Tạo Blob từ dữ liệu giải mã
       const blob = new Blob([decryptedArrayBuffer], {
         type: type?.mime || "application/octet-stream",
       });
   
-      // Tạo URL tải về
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -243,17 +235,6 @@ export default function DetailPatient() {
       const res = await contract?.methods
         .deleteRecord(id, hash)
         .send({ from: accountAddress, gas: 3000000 });
-      // const response = await fetch(
-      //     `${pinataConfig.pinata_server}/pinning/unpin/QmZwCUcz3X3TtyowEdcTZyzi4ZMkKVoUAC6en4TNzMur1w`,
-      //     {
-      //       method: "DELETE",   
-      //       headers: {
-      //         Authorization: `Bearer ${pinataConfig.jwt}`,
-      //       },  
-      //     }
-      //   );
-        // console.log(response)
-      // getAllPatientRecord();
       toast.success("Xoá hồ sơ bệnh án thành công", { autoClose: 1000 });
     } catch (err) {
       toast.error("Xoá hồ sơ bệnh án thất bại", { autoClose: 1000 });

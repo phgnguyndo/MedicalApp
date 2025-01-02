@@ -29762,12 +29762,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x3b5fF28429Cd711ECe81F1A4d8ccb04477e0A898",
-      "transactionHash": "0xd16e6dfb29402e124c43c0d184e1df2143a3b3e227b74614d6d20c1d7bfd0f0d"
+      "address": "0xA0BFa87409000658b741F04986Dc111B8D708c8B",
+      "transactionHash": "0x7471336eb9d66218821e242513f3fe2c5c474c06cca3ce45d0ddb508adbbc186"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-01-02T00:52:04.002Z",
+  "updatedAt": "2025-01-02T12:43:26.053Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

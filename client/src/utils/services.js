@@ -58,27 +58,26 @@ const loadWeb3 = async (addess, setContract) => {
     const web3 = new Web3(provider);
     const instance = new web3.eth.Contract(
       ElectionContract.abi,
-      "0x2Bd84e233a8547cE16DD5710964621A57224ad42"
+      "0xA0BFa87409000658b741F04986Dc111B8D708c8B"
     );
     const res = await instance?.methods.user(addess).call();
-    console.log("check role", res);
+    setContract(instance);
+
     if (parseInt(res) === 0) {
       localStorage.setItem("role", "doctor");
-    }
-
-    if (parseInt(res) === 2) {
+      return "doctor";
+    } else if (parseInt(res) === 2) {
       localStorage.setItem("role", "owner");
-    }
-
-    if (parseInt(res) === 1) {
+      return "owner";
+    } else if (parseInt(res) === 1) {
       localStorage.setItem("role", "patient");
+      return "patient";
+    } else {
+      localStorage.removeItem("role");
+      return null;
     }
-
-    setContract(instance);
-    // console.log("check address", addess)
-    // console.log(instance)
-    // console.log("connect address success")
   } catch (error) {
+    return null;
     console.error("Error:", error);
   }
 };

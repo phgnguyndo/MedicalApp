@@ -23,7 +23,8 @@ const USER_TYPES = {
 const CURRENT_USER_TYPE = USER_TYPES.ADMIN_USER;
 
 const AdminElement = ({ children }: any) => {
-  if (CURRENT_USER_TYPE === USER_TYPES.ADMIN_USER) {
+  const role = localStorage.getItem('role');
+  if (role) {
     return <>{children}</>;
   } else {
     return <Navigate to={"/"} />;

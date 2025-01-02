@@ -30,18 +30,34 @@ export default function App() {
       const account = await solServices.handleConnect();
       if (account) {
         setAccountAddress(account);
-        solServices.loadWeb3(account, setContract);
+        const role =  await solServices.loadWeb3(account, setContract);
+        console.log(role)
+        if (role && window.location.pathname === "/") {
+          window.location.href = "/profile";
+        } 
+        
+     
       }
     };
 
     initialize();
 
     if (window.ethereum) {
-      const handleAccountsChanged = (accounts: any) => {
+      const handleAccountsChanged = async (accounts: any) => {
+        console.log("check ")
         if (accounts.length > 0) {
           setAccountAddress(accounts[0]);
-          solServices.loadWeb3(accounts[0], setContract);
-          window.location.reload();
+          const role = await solServices.loadWeb3(accounts[0], setContract);
+          // console.log("check ", role)
+          // if (role && window.location.pathname === "/") {
+          //   window.location.href = "/profile";
+          // } 
+          // if (!role) {       
+          //   window.location.href = "/";
+          // }
+
+          window.location.reload()
+      
         } else {
           setAccountAddress("");
         }
