@@ -12,6 +12,8 @@ import { serverConfig } from "../../config/serverConfig";
 import { renderAsync } from "docx-preview";
 import { fileTypeFromBuffer } from "file-type";
 import { pdfjs } from "react-pdf";
+import { pinataConfig } from "../../config/pinataConfig";
+import axios from "axios";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.js",
@@ -23,8 +25,11 @@ export default function ModalViewFile({ hash, isOpen, handleClose }) {
   const [fileType, setFileType] = React.useState(null);
   const viewerRef = React.useRef(null);
   const fetchFile = async () => {
+    // const response = await fetch(
+    //   `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+    // );
     const response = await fetch(
-      `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+      `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch the file");
@@ -49,7 +54,8 @@ export default function ModalViewFile({ hash, isOpen, handleClose }) {
   const docs = [
     {
       //   uri: require("../../assets/a.pdf"),
-      uri: `${serverConfig.server_download_ipfs}/ipfs/${hash}`,
+      // uri: `${serverConfig.server_download_ipfs}/ipfs/${hash}`,
+      uri: `${pinataConfig.pinata_server}/ipfs/QmeQvjsbch4jmfnKJqW6KQECaBFFeLKkCfZM4gHgZ7qjPX?pinataGatewayToken=${pinataConfig.gateway_token}`,
       fileType: "pdf",
       fileName: "bệnh án",
     },

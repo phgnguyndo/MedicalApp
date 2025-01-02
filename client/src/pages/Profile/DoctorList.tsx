@@ -72,6 +72,23 @@ export default function DoctorList() {
     }
   };
 
+  const handleRevokeAccess = async (address: any) => { 
+    try {
+      if (contract) {
+        const res = await contract?.methods
+          .revoke_access(address)
+          .send({ from: accountAddress, gas: 3000000 });
+        toast.success("Huỷ uỷ quyền điều trị thành công", {
+          autoClose: 1000,
+        });
+      }
+    } catch (err) {
+      toast.error("Bác sĩ chưa được uỷ quyền", {
+        autoClose: 1000,
+      });
+    }
+  }
+
   return (
     <Box sx={{ display: "flex" }}>
       <Appbar appBarTitle="Danh sách bác sĩ" />
@@ -122,14 +139,16 @@ export default function DoctorList() {
                         <TableCell>{doctor?.faculty || ""}</TableCell>
                         <TableCell>{doctor?.contact || ""}</TableCell>
                         <TableCell>
-                          <DeleteOutlineOutlinedIcon
+                          {
+                            localStorage.getItem("role") === "owner" && <DeleteOutlineOutlinedIcon
                             sx={{
                               color: "red",
                               cursor: "pointer",
                               marginRight: "5px",
                             }}
                             onClick={() => handleDelete(doctor.id)}
-                          />
+                          /> 
+                          }
                           {localStorage.getItem("role") === "patient" && (
                             <HandshakeOutlinedIcon
                               sx={{
@@ -138,6 +157,16 @@ export default function DoctorList() {
                                 marginRight: "5px",
                               }}
                               onClick={() => handleGrantAccess(doctor.address)}
+                            />
+                          )}
+                          {localStorage.getItem("role") === "patient" && (
+                            <HandshakeOutlinedIcon
+                              sx={{
+                                color: "red",
+                                cursor: "pointer",
+                                marginRight: "5px",
+                              }}
+                              onClick={() => handleRevokeAccess(doctor.address)}
                             />
                           )}
                         </TableCell>
