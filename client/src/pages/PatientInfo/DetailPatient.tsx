@@ -113,41 +113,115 @@ export default function DetailPatient() {
     getDetailPatient();
   }, [id, contract]);
 
+  const CryptoJS = require("crypto-js");
+  const decryptFile = (encryptedData: string, cryptoKey: string): Uint8Array => {
+    try {
+      // Giải mã AES
+      const decryptedBase64 = CryptoJS.AES.decrypt(encryptedData, cryptoKey).toString(
+        CryptoJS.enc.Utf8
+      );
+  
+      // Chuyển từ Base64 -> Uint8Array
+      const decryptedArrayBuffer = Uint8Array.from(atob(decryptedBase64), (c) =>
+        c.charCodeAt(0)
+      );
+      return decryptedArrayBuffer;
+    } catch (error) {
+      console.error("Decryption failed:", error);
+      throw new Error("Decryption failed");
+    }
+  };
+  // const handleDownloadfile = async (hash: any) => {
+  //   try {
+  //   //   const response = await fetch(
+  //   //     `${serverConfig.server_download_ipfs}/ipfs/${hash}`
+  //   //   );
+  //       const response = await fetch(
+  //      `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
+  //     );
+  //     const arrayBuffer = await response.arrayBuffer();
+
+  //     console.log(arrayBuffer);
+
+  //     //check typ file
+  //     const uint8Array = new Uint8Array(arrayBuffer);
+  //     const type: any = await fileTypeFromBuffer(uint8Array);
+  //     let name = "";
+  //     if (type?.ext === "pdf") {
+  //       name = "benhan.pdf";
+  //     } else {
+  //       name = "benhan.docx";
+  //     }
+  //     const blob = new Blob([arrayBuffer]);
+  //     console.log(blob);
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     console.log(url);
+  //     a.href = url;
+  //     a.download = name;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     document.body.removeChild(a);
+  //     URL.revokeObjectURL(url);
+  //     toast.success("Tải file thành công", { autoClose: 1000 });
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error("Tải file thất bại", { autoClose: 1000 });
+  //   }
+  // };
   const handleDownloadfile = async (hash: any) => {
     try {
-    //   const response = await fetch(
-    //     `${serverConfig.server_download_ipfs}/ipfs/${hash}`
-    //   );
-        const response = await fetch(
-       `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
+      // Fetch file từ IPFS
+      const response = await fetch(
+        `${pinataConfig.pinata_server}/ipfs/${hash}?pinataGatewayToken=${pinataConfig.gateway_token}`
       );
-      const arrayBuffer = await response.arrayBuffer();
-
-      console.log(arrayBuffer);
-
-      //check typ file
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const type: any = await fileTypeFromBuffer(uint8Array);
+      if (!response.ok) {
+        throw new Error("Failed to fetch file from IPFS");
+      }
+  
+      // Lấy nội dung mã hóa dưới dạng chuỗi
+      const encryptedData = await response.text();
+      console.log("Encrypted data (first 100 chars):", encryptedData.slice(0, 100));
+  
+      // Lấy khóa giải mã từ .env
+      const cryptoKey = process.env.REACT_APP_CRYPTO_KEY;
+      if (!cryptoKey) {
+        throw new Error("Missing CRYPTO_KEY in environment variables");
+      }
+  
+      // Giải mã file
+      const decryptedArrayBuffer = decryptFile(encryptedData, cryptoKey);
+      console.log("Decrypted ArrayBuffer size:", decryptedArrayBuffer.length);
+  
+      // Kiểm tra loại file
+      const type = await fileTypeFromBuffer(decryptedArrayBuffer);
+      console.log("File type detected:", type);
+  
       let name = "";
       if (type?.ext === "pdf") {
         name = "benhan.pdf";
       } else {
         name = "benhan.docx";
       }
-      const blob = new Blob([arrayBuffer]);
-      console.log(blob);
+  
+      // Tạo Blob từ dữ liệu giải mã
+      const blob = new Blob([decryptedArrayBuffer], {
+        type: type?.mime || "application/octet-stream",
+      });
+  
+      // Tạo URL tải về
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      console.log(url);
       a.href = url;
       a.download = name;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+  
       toast.success("Tải file thành công", { autoClose: 1000 });
     } catch (error) {
-      console.log(error);
+      console.error("Download failed:", error);
       toast.error("Tải file thất bại", { autoClose: 1000 });
     }
   };

@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import { pinataConfig } from "../../config/pinataConfig";
 import axios from 'axios'
+
 import { serverConfig } from "../../config/serverConfig";
 type FormValues = {
   _dname: string;
@@ -35,7 +36,7 @@ type FormValues = {
   _ipfs: any;
   addr: string;
 };
-
+const CryptoJS = require("crypto-js");
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -44,6 +45,20 @@ const Transition = React.forwardRef(function Transition(
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
+
+const encryptFile = (fileBuffer: ArrayBuffer, key: string): string => {
+  try {
+    // Chuyển đổi ArrayBuffer thành chuỗi Base64
+    const wordArray = CryptoJS.lib.WordArray.create(fileBuffer);
+    const base64String = CryptoJS.enc.Base64.stringify(wordArray);
+
+    // Mã hóa chuỗi Base64 bằng AES với khóa
+    return CryptoJS.AES.encrypt(base64String, key).toString();
+  } catch (error) {
+    console.error("Encryption failed:", error);
+    throw new Error("Encryption failed");
+  }
+};
 
 export default function AddPatientRecordDialog({
   patientInfo,
@@ -88,47 +103,63 @@ export default function AddPatientRecordDialog({
     if (docterInfo) docketName = docterInfo[1];
     console.log(docketName);
     try {
-      // upload file ipfs
-      const formData = new FormData();
       if (files.length === 0) {
-        toast.error("Vui lòng nhập file", {
-          autoClose: false,
-        });
+        toast.error("Vui lòng nhập file", { autoClose: false });
+        return;
       }
-      formData.append("file", files[0]);
-      // const response = await fetch(`${serverConfig.server_ipfs}/api/v0/add`, {
-      //   method: "POST",
-      //   body: formData, // Send form data
-      // });
-      // const data_ipfs = await response.json();
-      // console.log(data_ipfs);
-      console.log(process.env.REACT_APP_API_SECRET)
+  
+      const cryptoKey = process.env.REACT_APP_CRYPTO_KEY;
+      if (!cryptoKey) {
+        toast.error("Missing CRYPTO_KEY in environment variables.");
+        return;
+      }
+  
+      // Đọc file dưới dạng ArrayBuffer
+      const fileBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            resolve(event.target.result as ArrayBuffer);
+          } else {
+            reject(new Error("Failed to read file"));
+          }
+        };
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(files[0]);
+      });
+  
+      // Mã hóa file
+      const encryptedFile = encryptFile(fileBuffer, cryptoKey);
+  
+      // Tạo FormData với file mã hóa
+      const formData = new FormData();
+      formData.append("file", new Blob([encryptedFile], { type: "text/plain" }));
+  
+      // Upload file mã hóa lên IPFS
       const response = await axios.post(
-        'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
         formData,
         {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'pinata_api_key': pinataConfig.api_key,
-                'pinata_secret_api_key':pinataConfig.api_secret,
-                // "Authorization": process.env.JWT
-            },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            pinata_api_key: pinataConfig.api_key,
+            pinata_secret_api_key: pinataConfig.api_secret,
+          },
         }
-    );
-    // console.log(response)
+      );
+  
       if (response.status === 200) {
         const formattedDate = dayjs(data._visitedDate).format("DD-MM-YYYY");
         const dataSubmit = {
           ...data,
           _dname: docketName,
-          // _ipfs: data_ipfs["Hash"],
-          _ipfs: response.data["IpfsHash"],
+          _ipfs: response.data["IpfsHash"], // Hash IPFS của file mã hóa
           addr: patientInfo?.address,
           _visitedDate: formattedDate,
         };
-        console.log(dataSubmit);
+  
         if (contract) {
-          const res = await contract?.methods
+          await contract.methods
             .addRecord(
               dataSubmit._dname,
               dataSubmit._reason,
@@ -137,23 +168,17 @@ export default function AddPatientRecordDialog({
               dataSubmit.addr
             )
             .send({ from: accountAddress, gas: 3000000 });
-
+  
           getAllPatientRecord();
-          toast.success("Thêm mới bệnh án thành công", {
-            autoClose: 1000,
-          });
+          toast.success("Thêm mới bệnh án thành công", { autoClose: 1000 });
         }
         handleClose();
       } else {
-        toast.error("Thêm mới bệnh án thất bại", {
-          autoClose: 1000,
-        });
+        toast.error("Thêm mới bệnh án thất bại", { autoClose: 1000 });
       }
     } catch (err) {
-      toast.error("Thêm mới bệnh án thất bại", {
-        autoClose: 1000,
-      });
       console.error(err);
+      toast.error("Thêm mới bệnh án thất bại", { autoClose: 1000 });
     }
   };
 
